@@ -19,7 +19,7 @@
         <mvnArtifactId>mail</mvnArtifactId>
         <mvnVersion>3.0.0.60-ALPHA</mvnVersion>
         <filename>mail-extension</filename>
-        <luceeCoreVersion>6.2.0.286</luceeCoreVersion>
+        <luceeCoreVersion>7.1.0.0</luceeCoreVersion>
         <releaseType>server</releaseType>
         <label>Mail Extension</label>
         <camelname>Mail</camelname>
