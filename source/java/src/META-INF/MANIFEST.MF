@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Export-Package: org.lucee.extension.search.lucene
+Bundle-ManifestVersion: 2
+Import-Package: org.w3c.dom
+Require-Bundle: apache.lucene;bundle-version=2.4.1,
+ apache.lucene.analyzers;bundle-version=2.4.1.L0001,
+ apache.lucene.highlighter;bundle-version=2.4.1,
+ apache.lucene.misc;bundle-version=2.4.1,
+ apache.lucene.similarity;bundle-version=2.4.1,
+ apache.lucene.snowball;bundle-version=2.4.1,
+ apache.lucene.spellchecker;bundle-version=2.4.1,
+ org.apache.poi;bundle-version=2.5.1,
+ tm.extractors;bundle-version=0.4.0,
+ tagsoup;bundle-version=1.2.1,
+ org.lucee.pdfbox;bundle-version=3.0.0.RC102,
+ org.lucee.pdfbox-fontbox;bundle-version=3.0.0.RC1,
+ org.apache.commons.logging;bundle-version=1.2.0
+ 
