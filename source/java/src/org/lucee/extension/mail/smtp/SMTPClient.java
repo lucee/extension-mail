@@ -55,7 +55,6 @@ import org.lucee.extension.mail.MailException;
 import org.lucee.extension.mail.MailPart;
 import org.lucee.extension.mail.MailUtil;
 import org.lucee.extension.mail.ReflectionUtil;
-import org.lucee.extension.mail.ServerImpl;
 import org.lucee.extension.mail.proxy.ProxyDataImpl;
 import org.lucee.extension.mail.smtp.SMTPConnectionPool.SessionAndTransport;
 import org.lucee.extension.mail.spooler.CFMLSpoolerTaskListener;
@@ -209,7 +208,7 @@ public final class SMTPClient implements Serializable {
 		this.charset = charset;
 	}
 
-	public static ServerImpl toServerImpl(String server, int port, String usr, String pwd, long lifeTimespan,
+	public static Server toServerImpl(String server, int port, String usr, String pwd, long lifeTimespan,
 			long idleTimespan) throws MailException {
 		int index;
 
@@ -236,7 +235,7 @@ public final class SMTPClient implements Serializable {
 			server = server.substring(0, index);
 		}
 
-		ServerImpl srv = ServerImpl.getInstance(server, port, usr, pwd, lifeTimespan, idleTimespan, false, false);
+		Server srv = ServerPro.getInstance(server, port, usr, pwd, lifeTimespan, idleTimespan, false, false);
 		return srv;
 	}
 
@@ -847,7 +846,7 @@ public final class SMTPClient implements Serializable {
 			if (host != null) {
 				int prt;
 				String usr, pwd;
-				ServerImpl[] nServers = new ServerImpl[host.length];
+				Server[] nServers = new Server[host.length];
 				for (int i = 0; i < host.length; i++) {
 					usr = null;
 					pwd = null;
@@ -862,9 +861,9 @@ public final class SMTPClient implements Serializable {
 
 					nServers[i] = toServerImpl(host[i], prt, usr, pwd, lifeTimespan, idleTimespan);
 					if (ssl == SSL_YES)
-						nServers[i].setSSL(true);
+						ServerPro.setSSL(nServers[i], true);
 					if (tls == TLS_YES)
-						nServers[i].setTLS(true);
+						ServerPro.setTLS(nServers[i], true);
 
 				}
 				servers = nServers;
@@ -892,7 +891,7 @@ public final class SMTPClient implements Serializable {
 				if (tls != TLS_NONE)
 					_tls = tls == TLS_YES;
 				else
-					_tls = ((ServerImpl) server).isTLS();
+					_tls = ServerPro.isTLS(server);
 
 				if (_tls) {
 					MailUtil.setSystemPropMailSslProtocols();
@@ -902,16 +901,15 @@ public final class SMTPClient implements Serializable {
 				if (ssl != SSL_NONE)
 					_ssl = ssl == SSL_YES;
 				else
-					_ssl = ((ServerImpl) server).isSSL();
+					_ssl = ServerPro.isSSL(server);
 
 				MimeMessageAndSession msgSess;
-				boolean recyleConnection = ((ServerImpl) server).reuseConnections();
+				boolean recyleConnection = ServerPro.reuseConnections(server);
 				{// synchronized(LOCK) {
 					try {
 						msgSess = createMimeMessage(config, server.getHostName(), server.getPort(), _username,
-								_password, ((ServerImpl) server).getLifeTimeSpan(),
-								((ServerImpl) server).getIdleTimeSpan(), _tls, _ssl,
-								ReflectionUtil.isMailSendPartial(config), !recyleConnection,
+								_password, ServerPro.getLifeTimeSpan(server), ServerPro.getIdleTimeSpan(server), _tls,
+								_ssl, ReflectionUtil.isMailSendPartial(config), !recyleConnection,
 								ReflectionUtil.isUserset(config));
 					} catch (MessagingException e) {
 						// listener
