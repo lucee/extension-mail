@@ -221,7 +221,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 
 			it(title="verify mail server", body = function( currentSpec ) {
 				lock name="test:mail" {
-					var SMTPVerifier=createObject("java","lucee.runtime.net.mail.SMTPVerifier");
+					var SMTPVerifier=createObject("java","org.lucee.extension.mail.SMTPVerifier");
         			expect( SMTPVerifier.verify("localhost", nullValue(), nullValue(), variables.port) ).toBeTrue();
 				}
 			});	
@@ -327,7 +327,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	}
 
 	private function getMessageHeaders( msg ){
-		var str = utils.getHeaders( arguments.msg );
+		var str = com.icegreen.greenmail.util.GreenMailUtil::getHeaders( arguments.msg );
 		var tmp = listToArray( str, chr( 10 ) );
 		var headers = structNew( "ordered" );
 		arrayEach( tmp, function( v ){
