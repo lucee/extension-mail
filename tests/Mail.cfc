@@ -36,7 +36,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 		}
     }
 	
-	private function verify() {
+	 function verify() {
 		// TODO lucee losses the contex when i use the verify function directly 
 		return SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port);
 	}	
