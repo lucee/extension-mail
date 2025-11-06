@@ -342,6 +342,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 		systemOutput("--------- createURI ----------",1);
 		systemOutput(baseURI & "/" & calledName,1);
 		systemOutput(getCurrentTemplatePath(),1);
+		systemOutput(contractPath(getCurrentTemplatePath()),1);
 		
 		
 		return baseURI & "/" & calledName;
