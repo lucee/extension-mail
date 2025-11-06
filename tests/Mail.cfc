@@ -302,12 +302,12 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 					var messages = mail.getReceivedMessages();
 					expect( len(messages) ).toBe( len( headerNames ) );
 
-					arrayEach( headerNames, function( el, idx ) {
+					loop array=headerNames item="local.el" index="idx" {	
 						expect( messages[ idx ].getSubject() ).toBe( "mail #idx# with #el#");
 						var msgHeaders = getMessageHeaders( messages[ idx ] );
 						expect( msgHeaders).toHaveKey( "Message-Id" );
 						expect( msgHeaders["Message-Id"] ).toBeWithCase( "<" & messageId & "-" & el & ">" );
-					});
+					}
 
 					application.testSMTP.purgeEmailFromAllMailboxes();
 				}
