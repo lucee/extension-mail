@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>mail-extension</artifactId>
-    <version>1.0.0.0-ALPHA</version>
+    <version>0.0.0.17-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Mail</name>
 
