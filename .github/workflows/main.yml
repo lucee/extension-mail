@@ -80,6 +80,7 @@ jobs:
         with:
           repository: lucee/lucee
           path: lucee
+          ref: ${{ matrix.lucee.branch }}
 
       - name: Run Lucee Test Suite
         uses: lucee/script-runner@main
