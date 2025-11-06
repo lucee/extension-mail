@@ -54,21 +54,46 @@ public final class SMTPSender extends Thread {
 	public void run() {
 		Transport transport = null;
 		try {
-			transport = mmas.session.transport;// SMTPConnectionPool.getTransport(session,host,port,user,pass);
+			transport = mmas.session.transport;
 			if (user == null)
 				pass = null;
+
 			// connect
 			if (!transport.isConnected())
 				transport.connect(host, port, user, pass);
 
 			mmas.message.saveChanges();
 			if (!Util.isEmpty(mmas.messageId))
-				mmas.message.setHeader("Message-ID", mmas.messageId); // must be set after message.saveChanges()
-			transport.sendMessage(mmas.message, mmas.message.getAllRecipients());
-			isSent = true;
+				mmas.message.setHeader("Message-ID", mmas.messageId);
+
+			try {
+				transport.sendMessage(mmas.message, mmas.message.getAllRecipients());
+				isSent = true;
+			} catch (Exception sendException) {
+				// Connection might be stale - check and retry once
+				if (!transport.isConnected() || isConnectionStale(sendException)) {
+					try {
+						// Force reconnect
+						if (transport.isConnected()) {
+							transport.close();
+						}
+						transport.connect(host, port, user, pass);
+
+						// Retry send
+						transport.sendMessage(mmas.message, mmas.message.getAllRecipients());
+						isSent = true;
+					} catch (Exception retryException) {
+						// Retry failed, throw original exception
+						throw sendException;
+					}
+				} else {
+					// Not a connection issue, rethrow
+					throw sendException;
+				}
+			}
+
 		} catch (SendFailedException sfe) {
 			Address[] valid = sfe.getValidSentAddresses();
-			// a soon the mail was send to one reciever we do no longer block it
 			if (valid != null && valid.length > 0)
 				isSent = true;
 			this.throwable = sfe;
@@ -80,15 +105,28 @@ public final class SMTPSender extends Thread {
 					SMTPConnectionPool.releaseSessionAndTransport(mmas.session);
 				else
 					SMTPConnectionPool.disconnect(mmas.session.transport);
-
 			} catch (Exception e) {
-				// TODOO log
-
+				// TODO log
 			}
 			synchronized (lock) {
 				lock.notify();
 			}
 		}
+	}
+
+	// ========== ADD THIS HELPER METHOD ==========
+	/**
+	 * Check if exception indicates a stale/closed connection
+	 */
+	private boolean isConnectionStale(Exception e) {
+		String message = e.getMessage();
+		if (message == null)
+			return false;
+
+		// Common indicators of closed/stale connections
+		return message.contains("[EOF]") || message.contains("Connection closed") || message.contains("Broken pipe")
+				|| message.contains("Connection reset")
+				|| e instanceof javax.mail.MessagingException && e.getCause() instanceof java.net.SocketException;
 	}
 
 	/**
