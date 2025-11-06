@@ -72,15 +72,30 @@ public final class Pool {
 
 	public void clean(boolean force) throws Exception {
 		Iterator<Entry<String, PoolItemWrap>> it = map.entrySet().iterator();
+		List<String> keysToRem = new ArrayList<>();
+
 		Entry<String, PoolItemWrap> e;
 		while (it.hasNext()) {
 			e = it.next();
 			long now = System.currentTimeMillis();
-			if (force || ((e.getValue().lastAccess() + maxIdle) < now) || !e.getValue().getValue().isValid()) {
-				e.getValue().end();
-				map.remove(e.getKey());
+			try {
+				if (force || ((e.getValue().lastAccess() + maxIdle) < now) || !e.getValue().getValue().isValid()) {
+					e.getValue().end();
+					keysToRem.add(e.getKey());
+					// map.remove(e.getKey());
+				}
+			} catch (Exception ex) {
+				keysToRem.add(e.getKey());
+				// map.remove(e.getKey());
 			}
 		}
+
+		if (keysToRem.size() > 0) {
+			for (String k : keysToRem) {
+				map.remove(k);
+			}
+		}
+
 		stopControllerIfNecessary();
 	}
 

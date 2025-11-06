@@ -121,6 +121,9 @@ public abstract class MailClient implements PoolItem {
 			uid = name;
 		uid = type + ";" + uid + ";" + id;
 
+		System.err.println("xxxxxxxxxxx MailClient xxxxxxxxxxx");
+		System.err.println(uid);
+
 		PoolItem item = pool.get(uid);
 		if (item == null) {
 			if (Util.isEmpty(server)) {
