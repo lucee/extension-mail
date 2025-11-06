@@ -1,4 +1,4 @@
-component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettings='{
+component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail"  javaSettings='{
 		"maven": [
 			"com.icegreen:greenmail:2.1.7"
 		]

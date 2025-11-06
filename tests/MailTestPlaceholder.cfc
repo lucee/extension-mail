@@ -1,4 +1,4 @@
-component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx" {
+component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" {
     /*
 
     the lucee test suite runs without a http server, so the mail stuff can't be unit tested

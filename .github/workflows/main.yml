@@ -91,7 +91,7 @@ jobs:
           luceeVersionQuery: ${{ matrix.lucee.query }}
           extensionDir: ${{ github.workspace }}/target
         env:
-          testLabels: mailx
+          testLabels: mail
           testAdditional: ${{ github.workspace }}/tests
           LUCEE_ADMIN_PASSWORD: admin
 
