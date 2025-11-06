@@ -79,7 +79,7 @@ public final class Pool {
 			e = it.next();
 			long now = System.currentTimeMillis();
 			try {
-				if (force || ((e.getValue().lastAccess() + maxIdle) < now) || !e.getValue().getValue().isValid()) {
+				if (force || ((e.getValue().lastAccess() + maxIdle) < now)) {
 					e.getValue().end();
 					keysToRem.add(e.getKey());
 					// map.remove(e.getKey());

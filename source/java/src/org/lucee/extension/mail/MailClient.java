@@ -74,8 +74,7 @@ public abstract class MailClient implements PoolItem {
 			try {
 				start();
 			} catch (MessagingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+
 			}
 		}
 		return _store != null && _store.isConnected();
@@ -119,7 +118,7 @@ public abstract class MailClient implements PoolItem {
 			uid = createName(type, server, port, username, password, secure);
 		else
 			uid = name;
-		uid = type + ";" + uid + ";" + id;
+		uid = type + ";" + uid;
 
 		System.err.println("xxxxxxxxxxx MailClient xxxxxxxxxxx");
 		System.err.println(uid);
