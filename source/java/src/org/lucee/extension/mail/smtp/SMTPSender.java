@@ -84,7 +84,7 @@ public final class SMTPSender extends Thread {
 						isSent = true;
 					} catch (Exception retryException) {
 						// Retry failed, throw original exception
-						throw sendException;
+						throw retryException;
 					}
 				} else {
 					// Not a connection issue, rethrow
