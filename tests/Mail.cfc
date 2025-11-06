@@ -42,8 +42,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 			it(title="send a simple text mail", body = function( currentSpec ) {
 				lock name="test:mail" {
 					application.testSMTP.purgeEmailFromAllMailboxes();
-					mail to=variables.to from=variables.from subject="simple text mail" spoolEnable=false server="localhost" port=variables.port
-					reuseConnection=false {
+					mail to=variables.to from=variables.from subject="simple text mail" spoolEnable=false server="localhost" port=variables.port {
 						echo("This is a text email!");
 					}
 
@@ -75,8 +74,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 				
 				lock name="test:mail" {
 					application.testSMTP.purgeEmailFromAllMailboxes();
-					mail type="html"  to=variables.to from=variables.from subject="simple html mail" spoolEnable=false server="localhost" port=variables.port
-					reuseConnection=false {
+					mail type="html"  to=variables.to from=variables.from subject="simple html mail" spoolEnable=false server="localhost" port=variables.port {
 						echo("This is a html email!");
 					}
 
@@ -109,8 +107,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 				
 				lock name="test:mail" {
 					application.testSMTP.purgeEmailFromAllMailboxes();
-					mail to=variables.to from=variables.from subject="part text mail" spoolEnable=false server="localhost" port=variables.port
-					reuseConnection=false {
+					mail to=variables.to from=variables.from subject="part text mail" spoolEnable=false server="localhost" port=variables.port {
 						mailpart type="text" {
 							echo("This is a text email!");
 						}
@@ -145,8 +142,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 				
 				lock name="test:mail" {
 					application.testSMTP.purgeEmailFromAllMailboxes();
-					mail to=variables.to from=variables.from subject="part html mail" spoolEnable=false server="localhost" port=variables.port
-					reuseConnection=false {
+					mail to=variables.to from=variables.from subject="part html mail" spoolEnable=false server="localhost" port=variables.port {
 						mailpart type="html" {
 							echo("This is a html email!");
 						}
@@ -181,8 +177,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 				
 				lock name="test:mail" {
 					application.testSMTP.purgeEmailFromAllMailboxes();
-					mail to=variables.to from=variables.from subject="multi part mail" spoolEnable=false server="localhost" port=variables.port
-					reuseConnection=false {
+					mail to=variables.to from=variables.from subject="multi part mail" spoolEnable=false server="localhost" port=variables.port {
 						mailpart type="text" {
 							echo("This is a text email!");
 						}
@@ -248,8 +243,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 					fileWrite(file, subject);
 					
 					mail.purgeEmailFromAllMailboxes();
-					mail to=variables.to from=variables.from subject=subject spoolEnable=false server="localhost" port=variables.port type="html"
-					reuseConnection=false {
+					mail to=variables.to from=variables.from subject=subject spoolEnable=false server="localhost" port=variables.port type="html" {
 						echo(subject);
 						mailparam file=file ;
 					}
@@ -295,8 +289,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 					var headerNames = [ "Message-ID", "Message-Id", "message-id", "MESSAGE-ID" ];
 					arrayEach( headerNames, function( el, idx ) {
 						mail to=variables.to from=variables.from subject="mail #idx# with #el#" 
-								spoolEnable=false server="localhost" port=variables.port
-								reuseConnection=false {
+								spoolEnable=false server="localhost" port=variables.port {
 							mailparam name="#el#" value="<#messageId#-#el#>";
 							mailpart type="html" {
 								echo("This is a html email!");
