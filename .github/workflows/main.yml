@@ -90,7 +90,7 @@ jobs:
           luceeVersionQuery: ${{ matrix.lucee.query }}
           extensionDir: ${{ github.workspace }}/target
         env:
-          testLabels: mail
+          testLabels: mailx
           testAdditional: ${{ github.workspace }}/tests
 
   deploy:
