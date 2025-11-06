@@ -93,6 +93,7 @@ jobs:
         env:
           testLabels: mailx
           testAdditional: ${{ github.workspace }}/tests
+          LUCEE_ADMIN_PASSWORD: admin
 
   deploy:
     runs-on: ubuntu-latest
