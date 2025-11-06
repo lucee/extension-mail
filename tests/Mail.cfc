@@ -41,7 +41,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 		return SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port);
 	}	
 	
-	private function getHeaders(msg) {
+	 function getHeaders(msg) {
 		// TODO lucee losses the contex when i use the verify function directly 
 		return GreenMailUtil::getHeaders( arguments.msg );
 	}
