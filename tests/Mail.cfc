@@ -7,7 +7,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	import "com.icegreen.greenmail.util.ServerSetup";
 	import "com.icegreen.greenmail.util.GreenMail";
 	import "com.icegreen.greenmail.util.GreenMailUtil";
-
+	import "org.lucee.extension.mail.SMTPVerifier";
 	processingdirective pageencoding="UTF-8";
 
 
@@ -25,7 +25,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 		else {
 			application.testSMTP.purgeEmailFromAllMailboxes();
 		}
-
+		application.self=this;
 
     }
 
@@ -36,6 +36,15 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 		}
     }
 	
+	private function verify() {
+		// TODO lucee losses the contex when i use the verify function directly 
+		return SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port);
+	}	
+	
+	private function getHeaders(msg) {
+		// TODO lucee losses the contex when i use the verify function directly 
+		return GreenMailUtil::getHeaders( arguments.msg );
+	}
 	
 	
 	function run( testResults , testBox ) {
@@ -222,7 +231,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 
 			it(title="verify mail server", body = function( currentSpec ) {
 				lock name="test:mail" {
-					expect( org.lucee.extension.mail.SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port) ).toBeTrue();
+					expect( application.self.verify() ).toBeTrue();
 				}
 			});	
 
@@ -327,7 +336,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	}
 
 	private function getMessageHeaders( msg ){
-		var str = GreenMailUtil::getHeaders( arguments.msg );
+		var str = application.self.getHeaders( arguments.msg );
 		var tmp = listToArray( str, chr( 10 ) );
 		var headers = structNew( "ordered" );
 		arrayEach( tmp, function( v ){
