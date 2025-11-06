@@ -222,8 +222,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 
 			it(title="verify mail server", body = function( currentSpec ) {
 				lock name="test:mail" {
-					var SMTPVerifier=createObject("java","org.lucee.extension.mail.SMTPVerifier");
-        			expect( SMTPVerifier.verify("localhost", nullValue(), nullValue(), variables.port) ).toBeTrue();
+					expect( org.lucee.extension.mail.SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port) ).toBeTrue();
 				}
 			});	
 
