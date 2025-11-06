@@ -6,6 +6,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	
 	import "com.icegreen.greenmail.util.ServerSetup";
 	import "com.icegreen.greenmail.util.GreenMail";
+	import "com.icegreen.greenmail.util.GreenMailUtil";
 
 	processingdirective pageencoding="UTF-8";
 
@@ -327,7 +328,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	}
 
 	private function getMessageHeaders( msg ){
-		var str = com.icegreen.greenmail.util.GreenMailUtil::getHeaders( arguments.msg );
+		var str = GreenMailUtil::getHeaders( arguments.msg );
 		var tmp = listToArray( str, chr( 10 ) );
 		var headers = structNew( "ordered" );
 		arrayEach( tmp, function( v ){
