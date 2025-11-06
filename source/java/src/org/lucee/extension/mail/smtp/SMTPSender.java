@@ -24,6 +24,7 @@ import javax.mail.Transport;
 
 import org.lucee.extension.mail.smtp.SMTPClient.MimeMessageAndSession;
 
+import lucee.commons.io.log.Log;
 import lucee.loader.util.Util;
 
 public final class SMTPSender extends Thread {
@@ -37,9 +38,10 @@ public final class SMTPSender extends Thread {
 	private String pass;
 	private MimeMessageAndSession mmas;
 	private boolean recyleConnection;
+	private Log log;
 
 	public SMTPSender(Object lock, MimeMessageAndSession mmas, String host, int port, String user, String pass,
-			boolean reuseConnection) {
+			boolean reuseConnection, Log log) {
 		this.lock = lock;
 		this.mmas = mmas;
 
@@ -48,6 +50,7 @@ public final class SMTPSender extends Thread {
 		this.user = user;
 		this.pass = pass;
 		this.recyleConnection = reuseConnection;
+		this.log = log;
 	}
 
 	@Override
@@ -101,10 +104,19 @@ public final class SMTPSender extends Thread {
 			this.throwable = e;
 		} finally {
 			try {
-				if (recyleConnection)
+				if (recyleConnection) {
+					if (log != null) {
+						log.debug("mail", "release session [" + mmas.session.key + "] and transport (messageid:"
+								+ mmas.messageId + ")");
+					}
 					SMTPConnectionPool.releaseSessionAndTransport(mmas.session);
-				else
+				} else {
+					if (log != null) {
+						log.debug("mail", "disconnect [" + mmas.session.key + "] and transport (messageid:"
+								+ mmas.messageId + ")");
+					}
 					SMTPConnectionPool.disconnect(mmas.session.transport);
+				}
 			} catch (Exception e) {
 				// TODO log
 			}

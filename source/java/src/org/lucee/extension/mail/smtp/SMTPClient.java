@@ -921,7 +921,7 @@ public final class SMTPClient implements Serializable {
 					try {
 						SerializableObject lock = new SerializableObject();
 						SMTPSender sender = new SMTPSender(lock, msgSess, server.getHostName(), server.getPort(),
-								_username, _password, recyleConnection);
+								_username, _password, recyleConnection, log);
 						sender.start();
 						synchronized (lock) {
 							lock.wait(_timeout);
