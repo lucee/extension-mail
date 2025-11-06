@@ -340,6 +340,11 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	private string function createURI(string calledName, boolean contract=false){
 		var base = getDirectoryFromPath( getCurrentTemplatePath() );
 		var baseURI = contract ? contractPath( base ) : "/testAdditional/#listLast(base,"\/")#";
+		systemOutput("--------- createURI ----------",1);
+		systemOutput(baseURI & "/" & calledName,1);
+		systemOutput(getCurrentTemplatePath(),1);
+		
+		
 		return baseURI & "/" & calledName;
 	}
 
