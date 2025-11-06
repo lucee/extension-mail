@@ -35,18 +35,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 			application.testSMTP.stop();
 		}
     }
-	
-	 function verify() {
-		// TODO lucee losses the contex when i use the verify function directly 
-		return SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port);
-	}	
-	
-	 function getHeaders(msg) {
-		// TODO lucee losses the contex when i use the verify function directly 
-		return GreenMailUtil::getHeaders( arguments.msg );
-	}
-	
-	
+
 	function run( testResults , testBox ) {
 		describe( title="Test suite for the tag cfmail", body=function() {
 			it(title="send a simple text mail", body = function( currentSpec ) {
@@ -229,13 +218,11 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 				
 			});	
 
-			/*
-			TODO issue seeing class here
 			it(title="verify mail server", body = function( currentSpec ) {
 				lock name="test:mail" {
-					expect( application.self.verify() ).toBeTrue();
+					expect( return SMTPVerifier::verify("localhost", nullValue(), nullValue(), variables.port) ).toBeTrue();
 				}
-			});*/	
+			});	
 
 
 			it(title="send part with umlaut in file name ans subject", body = function( currentSpec ) {
@@ -338,7 +325,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mailx"  javaSettin
 	}
 
 	private function getMessageHeaders( msg ){
-		var str = application.self.getHeaders( arguments.msg );
+		var str = GreenMailUtil::getHeaders( arguments.msg );
 		var tmp = listToArray( str, chr( 10 ) );
 		var headers = structNew( "ordered" );
 		arrayEach( tmp, function( v ){
