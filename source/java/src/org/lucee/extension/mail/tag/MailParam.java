@@ -3,7 +3,7 @@ package org.lucee.extension.mail.tag;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import org.apache.commons.mail.EmailAttachment;
+import org.apache.commons.mail2.jakarta.EmailAttachment;
 
 import jakarta.ejb.ApplicationException;
 import jakarta.servlet.jsp.tagext.Tag;

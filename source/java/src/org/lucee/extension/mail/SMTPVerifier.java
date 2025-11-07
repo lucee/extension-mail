@@ -20,13 +20,12 @@ package org.lucee.extension.mail;
 
 import java.util.Properties;
 
-import javax.mail.Authenticator;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
+import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
 
-import org.apache.commons.mail.DefaultAuthenticator;
-
+import jakarta.mail.Authenticator;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
 import lucee.loader.util.Util;
 import lucee.runtime.net.mail.SMTPException;
 

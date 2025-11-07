@@ -25,9 +25,9 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import javax.activation.DataSource;
-
 import org.lucee.extension.mail.MailUtil;
+
+import jakarta.activation.DataSource;
 
 public final class URLDataSource2 implements DataSource {
 

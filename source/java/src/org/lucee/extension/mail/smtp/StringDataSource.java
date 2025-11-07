@@ -25,10 +25,9 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
-import javax.activation.DataSource;
-
 import org.apache.commons.text.WordUtils;
 
+import jakarta.activation.DataSource;
 import lucee.loader.util.Util;
 
 public final class StringDataSource implements DataSource {

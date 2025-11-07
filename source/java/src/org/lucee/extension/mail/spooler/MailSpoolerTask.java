@@ -3,12 +3,11 @@ package org.lucee.extension.mail.spooler;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
-import javax.mail.internet.InternetAddress;
-
 import org.lucee.extension.mail.MailException;
 import org.lucee.extension.mail.MailUtil;
 import org.lucee.extension.mail.smtp.SMTPClient;
 
+import jakarta.mail.internet.InternetAddress;
 import lucee.loader.engine.CFMLEngineFactory;
 import lucee.loader.util.Util;
 import lucee.runtime.config.Config;

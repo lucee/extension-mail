@@ -18,14 +18,13 @@
  **/
 package org.lucee.extension.mail.imap;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-
 import org.lucee.extension.mail.MailClient;
 
 import com.sun.mail.imap.IMAPFolder;
 
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
 import lucee.loader.engine.CFMLEngineFactory;
 
 public final class ImapClient extends MailClient {

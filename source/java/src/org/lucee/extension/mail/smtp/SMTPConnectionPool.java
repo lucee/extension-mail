@@ -26,13 +26,13 @@ import java.util.Properties;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.mail.Authenticator;
-import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
-import javax.mail.Session;
-import javax.mail.Transport;
-
 import org.lucee.extension.mail.MailUtil;
+
+import jakarta.mail.Authenticator;
+import jakarta.mail.MessagingException;
+import jakarta.mail.NoSuchProviderException;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
 
 public final class SMTPConnectionPool {
 

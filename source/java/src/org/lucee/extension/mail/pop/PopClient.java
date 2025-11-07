@@ -18,13 +18,13 @@
  **/
 package org.lucee.extension.mail.pop;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-
 import org.lucee.extension.mail.MailClient;
 
 import com.sun.mail.pop3.POP3Folder;
+
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
 
 public final class PopClient extends MailClient {
 

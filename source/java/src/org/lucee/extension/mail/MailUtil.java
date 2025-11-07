@@ -21,7 +21,6 @@ package org.lucee.extension.mail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -34,11 +33,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeUtility;
-import javax.servlet.http.Cookie;
-
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeUtility;
 import lucee.commons.io.log.Log;
 import lucee.loader.engine.CFMLEngine;
 import lucee.loader.engine.CFMLEngineFactory;
@@ -442,24 +439,19 @@ public final class MailUtil {
 	}
 
 	public static PageContext createPageContext(final ConfigWeb cw) throws PageException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		return createPageContext(cw, baos, "/", "", TIMEOUT);
+		return createPageContext(cw, "/", "", TIMEOUT);
 	}
 
-	private static PageContext createPageContext(final ConfigWeb cw, final OutputStream os, final String path,
-			String qs, long timeout) throws PageException {
+	private static PageContext createPageContext(final ConfigWeb cw, final String path, String qs, long timeout)
+			throws PageException {
 		try {
 			CFMLEngine eng = CFMLEngineFactory.getInstance();
 			Class<?> clazz = eng.getClassUtil().loadClass("lucee.runtime.thread.ThreadUtil");
-			Class<?> clazzPairArray = eng.getClassUtil().loadClass("lucee.commons.lang.Pair[]");
 
-			Method method = clazz.getMethod("createPageContext",
-					new Class[] { ConfigWeb.class, OutputStream.class, String.class, String.class, String.class,
-							Cookie[].class, clazzPairArray, byte[].class, clazzPairArray, Struct.class, boolean.class,
-							long.class });
+			Method method = clazz.getMethod("createPageContext", new Class[] { ConfigWeb.class, String.class,
+					String.class, String.class, byte[].class, boolean.class, long.class });
 
-			return (PageContext) method.invoke(null,
-					new Object[] { cw, os, "", path, qs, new Cookie[0], null, null, null, null, true, timeout });
+			return (PageContext) method.invoke(null, new Object[] { cw, "", path, qs, null, true, timeout });
 		} catch (Exception e) {
 			throw CFMLEngineFactory.getInstance().getCastUtil().toPageException(e);
 		}

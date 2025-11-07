@@ -38,19 +38,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.activation.DataHandler;
-import javax.mail.Authenticator;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimePart;
-
-import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
 import org.lucee.extension.mail.MailException;
 import org.lucee.extension.mail.MailPart;
 import org.lucee.extension.mail.MailUtil;
@@ -64,6 +52,17 @@ import org.lucee.extension.mail.spooler.UDFSpoolerTaskListener;
 
 import com.sun.mail.smtp.SMTPMessage;
 
+import jakarta.activation.DataHandler;
+import jakarta.mail.Authenticator;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.internet.MimePart;
 import lucee.commons.io.log.Log;
 import lucee.commons.io.res.Resource;
 import lucee.loader.engine.CFMLEngine;

@@ -18,12 +18,11 @@
  **/
 package org.lucee.extension.mail.smtp;
 
-import javax.mail.Address;
-import javax.mail.SendFailedException;
-import javax.mail.Transport;
-
 import org.lucee.extension.mail.smtp.SMTPClient.MimeMessageAndSession;
 
+import jakarta.mail.Address;
+import jakarta.mail.SendFailedException;
+import jakarta.mail.Transport;
 import lucee.commons.io.log.Log;
 import lucee.loader.util.Util;
 
@@ -138,7 +137,7 @@ public final class SMTPSender extends Thread {
 		// Common indicators of closed/stale connections
 		return message.contains("[EOF]") || message.contains("Connection closed") || message.contains("Broken pipe")
 				|| message.contains("Connection reset")
-				|| e instanceof javax.mail.MessagingException && e.getCause() instanceof java.net.SocketException;
+				|| e instanceof jakarta.mail.MessagingException && e.getCause() instanceof java.net.SocketException;
 	}
 
 	/**
