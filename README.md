@@ -1,9 +1,10 @@
-# Lucee Lucene Extension
+# Lucee Mail Extension
 
-Docs: https://docs.lucee.org/categories/search.html
+With Lucee 7.1, mail functionaility has been moved from core into this extension
 
-Issues: https://luceeserver.atlassian.net/issues/?jql=labels%20%3D%20cfsearch
+Docs:
+- https://docs.lucee.org/reference/tags/mail.html
+- https://docs.lucee.org/reference/tags/pop.html
+- https://docs.lucee.org/reference/tags/pop.html
 
-## Known Issues
-
-- File locking problems on Windows https://luceeserver.atlassian.net/browse/LDEV-3310
+Issues: https://luceeserver.atlassian.net/issues/?jql=labels%20%3D%20smtp
