@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>mail-extension</artifactId>
-    <version>1.1.0.1-BETA</version>
+    <version>1.1.0.1-RC</version>
     <packaging>pom</packaging>
     <name>Mail</name>
 
@@ -17,7 +17,6 @@
         <mvnGroupId>org.lucee</mvnGroupId>
         <mvnGroupPath>org/lucee</mvnGroupPath>
         <mvnArtifactId>mail</mvnArtifactId>
-        <mvnVersion>3.0.0.60-ALPHA</mvnVersion>
         <filename>mail-extension</filename>
         <luceeCoreVersion>7.1.0.0</luceeCoreVersion>
         <releaseType>server</releaseType>
@@ -129,6 +128,8 @@
                                     <property name="bundleversion" value="${project.version}"/>
                                     <property name="bundlename" value="${bundlename}"/>
                                     <property name="filename" value="${project.artifactId}"/>
+                                    <property name="groupId" value="${project.groupId}"/>
+                                    <property name="artifactId" value="${project.artifactId}"/>
                                     <property name="id" value="${id}"/>
                                     <property name="luceeCoreVersion" value="${luceeCoreVersion}"/>
                                     <property name="releaseType" value="${releaseType}"/>
