@@ -90,6 +90,12 @@
             <arg value="dependency:copy-dependencies"/>
         </exec>
 
+        <!-- Copy parent POMs automatically -->
+        <exec executable="bash" failonerror="true">
+            <arg value="${basedir}/copy-parent-poms.sh"/>
+            <arg value="${temp}/dependency"/>
+        </exec>
+
 
     </target>
     
