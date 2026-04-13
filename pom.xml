@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>mail-extension</artifactId>
-    <version>1.1.0.4</version>
+    <version>1.1.0.5</version>
     <packaging>pom</packaging>
     <name>Mail</name>
 
@@ -88,6 +88,7 @@
                                 <configuration>
                                     <files>
                                         <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
+                                        <file>${project.build.directory}/${project.artifactId}-${project.version}.lite.lex</file>
                                     </files>
                                 </configuration>
                             </execution>
