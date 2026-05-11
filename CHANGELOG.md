@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.6
+
+- [LDEV-5893](https://luceeserver.atlassian.net/browse/LDEV-5893) — stop re-enabling deprecated TLS protocols on SMTP STARTTLS path
+
 ## 1.1.0.3-RC
 
 - [LDEV-6093](https://luceeserver.atlassian.net/browse/LDEV-6093) — auto-bundle parent POMs to make extension fully self-contained
