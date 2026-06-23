@@ -16,3 +16,4 @@ target/*
 *.cfc.hbm.xml
 /cache
 .vscode/settings.json
+/maven-deploy.sh
