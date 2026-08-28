@@ -17,21 +17,22 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" {
 	import "java.io.ObjectOutputStream";
 	import "java.nio.charset.Charset";
 
-	// SMTPClient lives in the internal package org.lucee.extension.mail.smtp. Preferred way to get
-	// at it without hardcoding the extension version: borrow the classloader from a class in the
-	// extension's public package (MailPart) - the same classloader can also load the internal
-	// SMTPClient. Fall back to loading via the deployed maven library if that is not resolvable.
-	variables.mailArtifact = "org.lucee:mail:1.1.0.8-SNAPSHOT";
+	// SMTPClient lives in the internal package org.lucee.extension.mail.smtp. The extension deploys
+	// its classes as a maven library (org.lucee:mail), so we load it via that coordinate. The
+	// version is read from the installed extension at runtime (extensionList()) so nothing here is
+	// pinned to a specific release.
+	variables.mailExtensionId = "212BA548-F15A-4EBD-8B1EEDF8DD8A844D";
+
+	private string function mailArtifact() {
+		var q = extensionList();
+		loop query=q {
+			if ( q.id == variables.mailExtensionId ) return "org.lucee:mail:" & q.version;
+		}
+		throw( message="mail extension [#variables.mailExtensionId#] not found via extensionList()" );
+	}
 
 	private function newSMTPClient() {
-		try {
-			var anchor = createObject( "java", "org.lucee.extension.mail.MailPart" ).init();
-			var extLoader = anchor.getClass().getClassLoader();
-			return extLoader.loadClass( "org.lucee.extension.mail.smtp.SMTPClient" ).newInstance();
-		} catch ( any e ) {
-			systemOutput( "SpoolerSerializationTest: classloader bridge failed [#e.message#], falling back to maven", true );
-			return createObject( "java", "org.lucee.extension.mail.smtp.SMTPClient", { maven: [ variables.mailArtifact ] } ).init();
-		}
+		return createObject( "java", "org.lucee.extension.mail.smtp.SMTPClient", { maven: [ mailArtifact() ] } ).init();
 	}
 
 	function run( testResults, testBox ) {
