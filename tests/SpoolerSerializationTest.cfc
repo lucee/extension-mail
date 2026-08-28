@@ -36,17 +36,18 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" {
 			});
 
 			it( title="serializes with an explicit charset set (iso-8859-1)", body=function() {
-				var client = newSMTPClient();
-				client.setCharset( Charset::forName( "ISO-8859-1" ) );
-				expect( serializedSize( client ) ).toBeGT( 0 );
+				// note: do not name this var "client" - that is a reserved CFML scope
+				var smtp = newSMTPClient();
+				smtp.setCharset( Charset::forName( "ISO-8859-1" ) );
+				expect( serializedSize( smtp ) ).toBeGT( 0 );
 			});
 
 			it( title="serializes with all three charset-bearing fields populated", body=function() {
-				var client = newSMTPClient();
-				client.setCharset( Charset::forName( "UTF-8" ) );
-				client.setPlainText( "plain body", Charset::forName( "ISO-8859-1" ) );
-				client.setHTMLText( "<b>html body</b>", Charset::forName( "UTF-16" ) );
-				expect( serializedSize( client ) ).toBeGT( 0 );
+				var smtp = newSMTPClient();
+				smtp.setCharset( Charset::forName( "UTF-8" ) );
+				smtp.setPlainText( "plain body", Charset::forName( "ISO-8859-1" ) );
+				smtp.setHTMLText( "<b>html body</b>", Charset::forName( "UTF-16" ) );
+				expect( serializedSize( smtp ) ).toBeGT( 0 );
 			});
 
 		});
