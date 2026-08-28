@@ -39,6 +39,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
+import org.lucee.extension.mail.CharsetSerializable;
 import org.lucee.extension.mail.MailException;
 import org.lucee.extension.mail.MailPart;
 import org.lucee.extension.mail.MailUtil;
@@ -110,15 +111,15 @@ public final class SMTPClient implements Serializable {
 	private int timeout = -1;
 
 	private String plainText;
-	private Charset plainTextCharset;
+	private CharsetSerializable plainTextCharset;
 
 	private String htmlText;
-	private Charset htmlTextCharset;
+	private CharsetSerializable htmlTextCharset;
 
 	private Attachment[] attachmentz;
 
 	private String[] host;
-	private Charset charset = MailUtil.UTF8;
+	private CharsetSerializable charset = CharsetSerializable.of(MailUtil.UTF8);
 	private InternetAddress from;
 	private InternetAddress[] tos;
 	private InternetAddress[] bccs;
@@ -204,7 +205,7 @@ public final class SMTPClient implements Serializable {
 	 *            the charset to set
 	 */
 	public void setCharset(Charset charset) {
-		this.charset = charset;
+		this.charset = CharsetSerializable.of(charset);
 	}
 
 	public static Server toServerImpl(String server, int port, String usr, String pwd, long lifeTimespan,
@@ -501,30 +502,30 @@ public final class SMTPClient implements Serializable {
 		// if(tos==null)throw new MessagingException("A [to] email address is required
 		// to send an email");
 
-		checkAddress(from, charset);
+		checkAddress(from, charset.toCharset());
 		// checkAddress(tos,charset);
 
 		msg.setFrom(from);
 		// msg.setRecipients(Message.RecipientType.TO, tos);
 
 		if (tos != null) {
-			checkAddress(tos, charset);
+			checkAddress(tos, charset.toCharset());
 			msg.setRecipients(Message.RecipientType.TO, tos);
 		}
 		if (ccs != null) {
-			checkAddress(ccs, charset);
+			checkAddress(ccs, charset.toCharset());
 			msg.setRecipients(Message.RecipientType.CC, ccs);
 		}
 		if (bccs != null) {
-			checkAddress(bccs, charset);
+			checkAddress(bccs, charset.toCharset());
 			msg.setRecipients(Message.RecipientType.BCC, bccs);
 		}
 		if (rts != null) {
-			checkAddress(rts, charset);
+			checkAddress(rts, charset.toCharset());
 			msg.setReplyTo(rts);
 		}
 		if (fts != null) {
-			checkAddress(fts, charset);
+			checkAddress(fts, charset.toCharset());
 			msg.setEnvelopeFrom(fts[0].toString());
 		}
 
@@ -691,7 +692,7 @@ public final class SMTPClient implements Serializable {
 	 */
 	public void setPlainText(String plainText, Charset plainTextCharset) {
 		this.plainText = plainText;
-		this.plainTextCharset = plainTextCharset;
+		this.plainTextCharset = CharsetSerializable.of(plainTextCharset);
 	}
 
 	/**
@@ -716,7 +717,7 @@ public final class SMTPClient implements Serializable {
 	 */
 	public void setHTMLText(String htmlText, Charset htmlTextCharset) {
 		this.htmlText = htmlText;
-		this.htmlTextCharset = htmlTextCharset;
+		this.htmlTextCharset = CharsetSerializable.of(htmlTextCharset);
 	}
 
 	public void addAttachment(Resource resource, String fileName, String type, String disposition, String contentID,
@@ -988,17 +989,17 @@ public final class SMTPClient implements Serializable {
 		props.put("attachments", this.attachmentz);
 		props.put("bccs", this.bccs);
 		props.put("ccs", this.ccs);
-		props.put("charset", this.charset);
+		props.put("charset", this.charset == null ? null : this.charset.toCharset());
 		props.put("from", this.from);
 		props.put("fts", this.fts);
 		props.put("headers", this.headers);
 		props.put("host", server.getHostName());
 		props.put("htmlText", this.htmlText);
-		props.put("htmlTextCharset", this.htmlTextCharset);
+		props.put("htmlTextCharset", this.htmlTextCharset == null ? null : this.htmlTextCharset.toCharset());
 		props.put("parts", this.parts);
 		props.put("password", this.password);
 		props.put("plainText", this.plainText);
-		props.put("plainTextCharset", this.plainTextCharset);
+		props.put("plainTextCharset", this.plainTextCharset == null ? null : this.plainTextCharset.toCharset());
 		props.put("port", server.getPort());
 		props.put("proxyData", this.proxyData);
 		props.put("rts", this.rts);
@@ -1073,7 +1074,8 @@ public final class SMTPClient implements Serializable {
 
 	private void fillHTMLText(Config config, MimePart mp) throws MessagingException {
 		if (htmlTextCharset == null)
-			htmlTextCharset = getMailDefaultCharset(config);
+			htmlTextCharset = CharsetSerializable.of(getMailDefaultCharset(config));
+		Charset htmlTextCs = htmlTextCharset.toCharset();
 
 		String transferEncoding;
 
@@ -1085,7 +1087,7 @@ public final class SMTPClient implements Serializable {
 		if (isUse7bitHtmlEncoding()) {
 			transferEncoding = "7bit";
 			// when using 7bit, we must always wrap lines
-			mp.setDataHandler(new DataHandler(new StringDataSource(htmlText, TEXT_HTML, htmlTextCharset, 998)));
+			mp.setDataHandler(new DataHandler(new StringDataSource(htmlText, TEXT_HTML, htmlTextCs, 998)));
 			/*
 			 * The default behavior is to using "quoted-printable" for HTML emails. This
 			 * will force wrapping of lines to 76 characters and encoded any non-ASCII
@@ -1095,13 +1097,13 @@ public final class SMTPClient implements Serializable {
 			 */
 		} else {
 			transferEncoding = "quoted-printable";
-			mp.setDataHandler(new DataHandler(new StringDataSource(htmlText, TEXT_HTML, htmlTextCharset)));
+			mp.setDataHandler(new DataHandler(new StringDataSource(htmlText, TEXT_HTML, htmlTextCs)));
 		}
 
 		// headers must always be set after data handler is set or the headers will be
 		// replaced
 		mp.setHeader("Content-Transfer-Encoding", transferEncoding);
-		mp.setHeader("Content-Type", TEXT_HTML + "; charset=" + htmlTextCharset);
+		mp.setHeader("Content-Type", TEXT_HTML + "; charset=" + htmlTextCs);
 	}
 
 	private MimeBodyPart getPlainText(Config config) throws MessagingException {
@@ -1112,13 +1114,14 @@ public final class SMTPClient implements Serializable {
 
 	private void fillPlainText(Config config, MimePart mp) throws MessagingException {
 		if (plainTextCharset == null)
-			plainTextCharset = getMailDefaultCharset(config);
+			plainTextCharset = CharsetSerializable.of(getMailDefaultCharset(config));
+		Charset plainTextCs = plainTextCharset.toCharset();
 		mp.setDataHandler(new DataHandler(
-				new StringDataSource(plainText != null ? plainText : "", TEXT_PLAIN, plainTextCharset, 998)));
+				new StringDataSource(plainText != null ? plainText : "", TEXT_PLAIN, plainTextCs, 998)));
 		// headers must always be set after data handler is set or the headers will be
 		// replaced
 		mp.setHeader("Content-Transfer-Encoding", "7bit");
-		mp.setHeader("Content-Type", TEXT_PLAIN + "; charset=" + plainTextCharset);
+		mp.setHeader("Content-Type", TEXT_PLAIN + "; charset=" + plainTextCs);
 	}
 
 	private BodyPart toMimeBodyPart(Config config, MailPart part) throws MessagingException {

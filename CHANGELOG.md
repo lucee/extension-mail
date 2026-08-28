@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.8
+
+- [LDEV-6455](https://luceeserver.atlassian.net/browse/LDEV-6455) — fix spooled cfmail silently dropped (`NotSerializableException: sun.nio.cs.UTF_8`); charset fields on `SMTPClient` are now held via a serializable wrapper
+
 ## 1.1.0.6
 
 - [LDEV-5893](https://luceeserver.atlassian.net/browse/LDEV-5893) — stop re-enabling deprecated TLS protocols on SMTP STARTTLS path
