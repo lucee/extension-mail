@@ -17,20 +17,14 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" {
 	import "java.io.ObjectOutputStream";
 	import "java.nio.charset.Charset";
 
-	/*
-	 * SMTPClient lives in the internal package org.lucee.extension.mail.smtp, which the extension
-	 * bundle does NOT OSGi-export. A plain `import`/`new` therefore resolves against lucee.core and
-	 * throws ClassNotFoundException. It must be loaded from the extension bundle by its symbolic
-	 * name ("mail.extension"); the bundle's own classloader can see its non-exported classes.
-	 * (Passing no version resolves whichever mail.extension bundle is installed - i.e. the build
-	 * under test.)
-	 *
-	 * Alternative, loading a published artifact from maven instead of the installed bundle:
-	 *   createObject("java", "org.lucee.extension.mail.smtp.SMTPClient",
-	 *                { maven: [ "org.lucee:mail:1.1.0.8-SNAPSHOT" ] });
-	 */
+	// SMTPClient lives in the internal package org.lucee.extension.mail.smtp, which is neither
+	// OSGi-exported nor loaded as a named bundle - the extension deploys its classes as a maven
+	// library (org.lucee:mail). It must be loaded via that maven coordinate; the version tracks the
+	// extension version (pom.xml).
+	variables.mailArtifact = "org.lucee:mail:1.1.0.8-SNAPSHOT";
+
 	private function newSMTPClient() {
-		return createObject( "java", "org.lucee.extension.mail.smtp.SMTPClient", "mail.extension" ).init();
+		return createObject( "java", "org.lucee.extension.mail.smtp.SMTPClient", { maven: [ variables.mailArtifact ] } ).init();
 	}
 
 	function run( testResults, testBox ) {
