@@ -17,14 +17,21 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" {
 	import "java.io.ObjectOutputStream";
 	import "java.nio.charset.Charset";
 
-	// SMTPClient lives in the internal package org.lucee.extension.mail.smtp, which is neither
-	// OSGi-exported nor loaded as a named bundle - the extension deploys its classes as a maven
-	// library (org.lucee:mail). It must be loaded via that maven coordinate; the version tracks the
-	// extension version (pom.xml).
+	// SMTPClient lives in the internal package org.lucee.extension.mail.smtp. Preferred way to get
+	// at it without hardcoding the extension version: borrow the classloader from a class in the
+	// extension's public package (MailPart) - the same classloader can also load the internal
+	// SMTPClient. Fall back to loading via the deployed maven library if that is not resolvable.
 	variables.mailArtifact = "org.lucee:mail:1.1.0.8-SNAPSHOT";
 
 	private function newSMTPClient() {
-		return createObject( "java", "org.lucee.extension.mail.smtp.SMTPClient", { maven: [ variables.mailArtifact ] } ).init();
+		try {
+			var anchor = createObject( "java", "org.lucee.extension.mail.MailPart" ).init();
+			var extLoader = anchor.getClass().getClassLoader();
+			return extLoader.loadClass( "org.lucee.extension.mail.smtp.SMTPClient" ).newInstance();
+		} catch ( any e ) {
+			systemOutput( "SpoolerSerializationTest: classloader bridge failed [#e.message#], falling back to maven", true );
+			return createObject( "java", "org.lucee.extension.mail.smtp.SMTPClient", { maven: [ variables.mailArtifact ] } ).init();
+		}
 	}
 
 	function run( testResults, testBox ) {
