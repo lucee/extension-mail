@@ -203,6 +203,11 @@ start-bundles: false
           replace="${mvnVersion}" 
           byline="true"/>
 
+        <!-- org.lucee.cfml.Mail helper component (new mail()), core no longer contains cfmail -->
+        <copy todir="${dist}/extension/components">
+            <fileset dir="source/components"/>
+        </copy>
+
 
         <!-- Zip everything -->
         <zip destfile="${dist}/${filename}-${bundleversion}.lex">
