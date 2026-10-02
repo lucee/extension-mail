@@ -20,7 +20,6 @@ package org.lucee.extension.mail;
 
 import java.util.Properties;
 
-import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
 
 import jakarta.mail.Authenticator;
 import jakarta.mail.MessagingException;
@@ -87,7 +86,7 @@ public final class SMTPVerifier {
 
 		Authenticator auth = null;
 		if (hasAuth)
-			auth = new DefaultAuthenticator(username, password);
+			auth = new PasswordAuthenticator(username, password);
 		Session session = Session.getInstance(props, auth);
 		session.setDebug(true); // enable logging mail debugging output to console
 

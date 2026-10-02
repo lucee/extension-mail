@@ -1,0 +1,9 @@
+#
+# LDEV-6485: Angus Mail's META-INF/jakarta.mailcap with the content handlers relocated to
+# org.lucee.extension.mail.angus (the classes are shaded into the extension jar, see pom.xml).
+#
+text/plain;;		x-java-content-handler=org.lucee.extension.mail.angus.mail.handlers.text_plain
+text/html;;		x-java-content-handler=org.lucee.extension.mail.angus.mail.handlers.text_html
+text/xml;;		x-java-content-handler=org.lucee.extension.mail.angus.mail.handlers.text_xml
+multipart/*;;		x-java-content-handler=org.lucee.extension.mail.angus.mail.handlers.multipart_mixed; x-java-fallback-entry=true
+message/rfc822;;	x-java-content-handler=org.lucee.extension.mail.angus.mail.handlers.message_rfc822

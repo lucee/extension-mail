@@ -86,6 +86,8 @@
             <arg value="-Dmdep.copyPom=true"/>
             <arg value="-Dmdep.useRepositoryLayout=true"/>
             <arg value="-DexcludeScope=provided"/>
+            <!-- LDEV-6485: Angus is shaded (relocated) into the extension jar, do not ship the original jars -->
+            <arg value="-DexcludeGroupIds=org.eclipse.angus"/>
             <arg value="-Drevision=${bundleversion}"/>
             <arg value="dependency:copy-dependencies"/>
         </exec>
@@ -111,6 +113,7 @@
             <include name="*.pom"/>
             <exclude name="*-sources.jar"/>
             <exclude name="*-javadoc.jar"/>
+            <exclude name="original-*.jar"/>
         </fileset>
     </copy>
 

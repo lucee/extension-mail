@@ -3,7 +3,7 @@ package org.lucee.extension.mail.tag;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import org.apache.commons.mail2.jakarta.EmailAttachment;
+import jakarta.mail.Part;
 
 import jakarta.ejb.ApplicationException;
 import jakarta.servlet.jsp.tagext.Tag;
@@ -141,9 +141,9 @@ public final class MailParam extends TagImpl {
 	public void setDisposition(String disposition) throws PageException {
 		disposition = disposition.trim().toLowerCase();
 		if (disposition.equals("attachment"))
-			this.disposition = EmailAttachment.ATTACHMENT;
+			this.disposition = Part.ATTACHMENT;
 		else if (disposition.equals("inline"))
-			this.disposition = EmailAttachment.INLINE;
+			this.disposition = Part.INLINE;
 		else
 			throw CFMLEngineFactory.getInstance().getExceptionUtil().createApplicationException(
 					"For the tag [MailParam], the attribute [disposition] must be one of the following values [attachment, inline]");

@@ -20,7 +20,7 @@ package org.lucee.extension.mail.pop;
 
 import org.lucee.extension.mail.MailClient;
 
-import com.sun.mail.pop3.POP3Folder;
+import org.eclipse.angus.mail.pop3.POP3Folder;
 
 import jakarta.mail.Folder;
 import jakarta.mail.Message;

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
 import org.lucee.extension.mail.imap.ImapClient;
 import org.lucee.extension.mail.pool.Pool;
 import org.lucee.extension.mail.pool.PoolItem;
@@ -262,21 +261,16 @@ public abstract class MailClient implements PoolItem {
 			}
 		}
 		// if(TYPE_POP3==getType()){}
-		_session = username != null ? Session.getInstance(properties, new DefaultAuthenticator(username, password))
+		_session = username != null ? Session.getInstance(properties, new PasswordAuthenticator(username, password))
 				: Session.getInstance(properties);
 
-		Thread t = Thread.currentThread();
-		ClassLoader ccl = t.getContextClassLoader();
-		t.setContextClassLoader(_session.getClass().getClassLoader());
-		try {
-			_store = _session.getStore(type);
-			if (!Util.isEmpty(username))
-				_store.connect(server, port, username, password);
-			else
-				_store.connect();
-		} finally {
-			t.setContextClassLoader(ccl);
-		}
+		// no context classloader switch needed (LDEV-6485): Angus Mail's providers resolve through the
+		// Session's own classloader, and none of its class names collide with javax.mail in core
+		_store = _session.getStore(type);
+		if (!Util.isEmpty(username))
+			_store.connect(server, port, username, password);
+		else
+			_store.connect();
 	}
 
 	protected abstract String getTypeAsString();

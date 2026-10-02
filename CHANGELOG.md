@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- [LDEV-6485](https://luceeserver.atlassian.net/browse/LDEV-6485) — fix `jakarta.mail.Provider: com.sun.mail.imap.IMAPProvider not a subtype` after javax.mail was used in the same JVM: replace `com.sun.mail:jakarta.mail` / `commons-email2-jakarta` with `jakarta.mail-api` 2.1 + Eclipse Angus Mail, shaded and relocated to `org.lucee.extension.mail.angus`, so no class name is shared with core's javax.mail (`com.sun.mail.*`); no context classloader switching
+
 ## 1.1.0.8
 
 - [LDEV-6455](https://luceeserver.atlassian.net/browse/LDEV-6455) — fix spooled cfmail silently dropped (`NotSerializableException: sun.nio.cs.UTF_8`); charset fields on `SMTPClient` are now held via a serializable wrapper

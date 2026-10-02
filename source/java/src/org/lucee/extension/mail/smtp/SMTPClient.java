@@ -38,11 +38,11 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
 import org.lucee.extension.mail.CharsetSerializable;
 import org.lucee.extension.mail.MailException;
 import org.lucee.extension.mail.MailPart;
 import org.lucee.extension.mail.MailUtil;
+import org.lucee.extension.mail.PasswordAuthenticator;
 import org.lucee.extension.mail.ReflectionUtil;
 import org.lucee.extension.mail.proxy.ProxyDataImpl;
 import org.lucee.extension.mail.smtp.SMTPConnectionPool.SessionAndTransport;
@@ -51,7 +51,7 @@ import org.lucee.extension.mail.spooler.ComponentSpoolerTaskListener;
 import org.lucee.extension.mail.spooler.MailSpoolerTask;
 import org.lucee.extension.mail.spooler.UDFSpoolerTaskListener;
 
-import com.sun.mail.smtp.SMTPMessage;
+import org.eclipse.angus.mail.smtp.SMTPMessage;
 
 import jakarta.activation.DataHandler;
 import jakarta.mail.Authenticator;
@@ -478,7 +478,7 @@ public final class SMTPClient implements Serializable {
 			props.put("mail.smtp.user", username);
 			props.put("mail.smtp.password", password);
 			props.put("password", password);
-			auth = new DefaultAuthenticator(username, password);
+			auth = new PasswordAuthenticator(username, password);
 		} else {
 			props.put("mail.smtp.auth", "false");
 			props.remove("mail.smtp.starttls.enable");

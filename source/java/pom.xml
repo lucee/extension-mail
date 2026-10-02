@@ -131,38 +131,6 @@
             <goals>deploy</goals>
           </configuration>
         </plugin>
-
-        <plugin>
-         <groupId>org.apache.maven.plugins</groupId>
-         <artifactId>maven-dependency-plugin</artifactId>
-         <version>2.10</version>
-         <executions>
-           <execution>
-             <id>unpack</id>
-             <phase>validate</phase>
-             <goals>
-               <goal>unpack</goal>
-             </goals>
-             <configuration>
-               <artifactItems>
-                 <artifactItem>
-                   <groupId>javax.activation</groupId>
-                    <artifactId>activation</artifactId>
-                    <version>1.1.1</version>
-                    <!-- <classifier></classifier> -->
-                   <type>jar</type>
-                   <overWrite>false</overWrite>
-                   <outputDirectory>${project.build.directory}/classes</outputDirectory>
-                   <includes>**/*.*</includes> 
-                 </artifactItem>
-               </artifactItems>
-               <overWriteReleases>true</overWriteReleases>
-               <overWriteSnapshots>true</overWriteSnapshots>
-             </configuration>
-           </execution>
-         </executions>
-       </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -186,6 +154,61 @@
                 </configuration>
             </plugin>
             
+            <!-- LDEV-6485: embed Angus Mail/Activation with relocated packages (no TCCL switching needed) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.eclipse.angus:angus-mail</include>
+                                    <include>org.eclipse.angus:angus-activation</include>
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.eclipse.angus</pattern>
+                                    <shadedPattern>org.lucee.extension.mail.angus</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>org.eclipse.angus:*</artifact>
+                                    <excludes>
+                                        <!-- these list org.eclipse.angus class names; providers come from
+                                             META-INF/services (relocated below), the mailcap is replaced -->
+                                        <exclude>META-INF/mailcap</exclude>
+                                        <exclude>META-INF/jakarta.mailcap</exclude>
+                                        <exclude>META-INF/*.providers</exclude>
+                                        <exclude>META-INF/hk2-locator/**</exclude>
+                                        <exclude>META-INF/native-image/**</exclude>
+                                        <exclude>META-INF/gfprobe-provider.xml</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <!-- rewrites the class names inside META-INF/services/* to the relocated package -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    <resource>META-INF/jakarta.mailcap</resource>
+                                    <file>shade/jakarta.mailcap</file>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Nexus Staging Maven Plugin to automate the release process -->
             <plugin>
               <groupId>org.sonatype.central</groupId>
@@ -213,18 +236,35 @@
   
   
     <dependencies>
- 	<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-email2-jakarta -->
+	<!-- LDEV-6485: Jakarta Mail 2.1 API + Eclipse Angus implementation.
+	     Angus is shaded into the extension jar and relocated to org.lucee.extension.mail.angus (see the
+	     maven-shade-plugin below), so the extension defines no implementation class whose name is also used
+	     by javax.mail in Lucee core (com.sun.mail.*) or by any other jakarta mail copy in the JVM
+	     (org.eclipse.angus.*). Lucee's context classloader can bind only one class per name, so shared names clash.
+	     Do not add com.sun.mail:jakarta.mail / com.sun.activation:jakarta.activation (directly or transitively,
+	     e.g. via commons-email2-jakarta): Lucee's runtime Maven resolver does not honour <exclusions>. -->
 	<dependency>
-	    <groupId>org.apache.commons</groupId>
-	    <artifactId>commons-email2-jakarta</artifactId>
-	    <version>2.0.0-M1</version>
+	    <groupId>jakarta.mail</groupId>
+	    <artifactId>jakarta.mail-api</artifactId>
+	    <version>2.1.5</version>
 	</dependency>
-	
-	<!-- https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail -->
 	<dependency>
-	    <groupId>com.sun.mail</groupId>
-	    <artifactId>jakarta.mail</artifactId>
-	    <version>2.0.2</version>
+	    <groupId>jakarta.activation</groupId>
+	    <artifactId>jakarta.activation-api</artifactId>
+	    <version>2.1.4</version>
+	</dependency>
+	<!-- shaded + relocated into the extension jar; optional so Lucee does not load the unrelocated jars at runtime -->
+	<dependency>
+	    <groupId>org.eclipse.angus</groupId>
+	    <artifactId>angus-mail</artifactId>
+	    <version>2.0.5</version>
+	    <optional>true</optional>
+	</dependency>
+	<dependency>
+	    <groupId>org.eclipse.angus</groupId>
+	    <artifactId>angus-activation</artifactId>
+	    <version>2.0.3</version>
+	    <optional>true</optional>
 	</dependency>
 	 
 	<dependency>
