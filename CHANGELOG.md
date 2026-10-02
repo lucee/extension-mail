@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.9
+
+- [LDEV-766](https://luceeserver.atlassian.net/browse/LDEV-766) — honour `useTLS`/`starttls` even when no SMTP username is set; also set `mail.smtp.starttls.required` so jakarta.mail does not fall back to plain text when STARTTLS fails
+
 ## 1.1.0.8
 
 - [LDEV-6455](https://luceeserver.atlassian.net/browse/LDEV-6455) — fix spooled cfmail silently dropped (`NotSerializableException: sun.nio.cs.UTF_8`); charset fields on `SMTPClient` are now held via a serializable wrapper
