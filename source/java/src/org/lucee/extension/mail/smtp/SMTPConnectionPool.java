@@ -143,10 +143,25 @@ public final class SMTPConnectionPool {
 
 	}
 
+	/**
+	 * Create a Session under the extension's own classloader as TCCL.
+	 * jakarta.mail Session uses ServiceLoader with the thread context classloader; if the
+	 * request CL has already seen javax.mail (core still ships commons-email-all), ServiceLoader
+	 * can pick up javax's IMAPProvider and every subsequent cfmail fails with
+	 * "jakarta.mail.Provider: com.sun.mail.imap.IMAPProvider not a subtype" (LDEV-6485).
+	 */
 	private static Session createSession(String key, Properties props, Authenticator auth) {
-		if (auth != null)
-			return Session.getInstance(props, auth);
-		return Session.getInstance(props);
+		Thread t = Thread.currentThread();
+		ClassLoader ccl = t.getContextClassLoader();
+		t.setContextClassLoader(Session.class.getClassLoader());
+		try {
+			if (auth != null)
+				return Session.getInstance(props, auth);
+			return Session.getInstance(props);
+		}
+		finally {
+			t.setContextClassLoader(ccl);
+		}
 	}
 
 	private static SessionAndTransport pop(Stack<SessionAndTransport> satStack) {
@@ -173,7 +188,16 @@ public final class SMTPConnectionPool {
 				throws NoSuchProviderException {
 			this.key = key;
 			this.session = createSession(key, props, auth);
-			this.transport = session.getTransport("smtp");
+			// getTransport also consults providers via TCCL in some jakarta.mail builds
+			Thread t = Thread.currentThread();
+			ClassLoader ccl = t.getContextClassLoader();
+			t.setContextClassLoader(Session.class.getClassLoader());
+			try {
+				this.transport = session.getTransport("smtp");
+			}
+			finally {
+				t.setContextClassLoader(ccl);
+			}
 			this.created = System.currentTimeMillis();
 			this.lifeTimespan = lifeTimespan;
 			this.idleTimespan = idleTimespan;

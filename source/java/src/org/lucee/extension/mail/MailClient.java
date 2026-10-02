@@ -262,13 +262,13 @@ public abstract class MailClient implements PoolItem {
 			}
 		}
 		// if(TYPE_POP3==getType()){}
-		_session = username != null ? Session.getInstance(properties, new DefaultAuthenticator(username, password))
-				: Session.getInstance(properties);
-
+		// LDEV-6485: wrap Session.getInstance as well as getStore — ServiceLoader runs at getInstance
 		Thread t = Thread.currentThread();
 		ClassLoader ccl = t.getContextClassLoader();
-		t.setContextClassLoader(_session.getClass().getClassLoader());
+		t.setContextClassLoader(Session.class.getClassLoader());
 		try {
+			_session = username != null ? Session.getInstance(properties, new DefaultAuthenticator(username, password))
+					: Session.getInstance(properties);
 			_store = _session.getStore(type);
 			if (!Util.isEmpty(username))
 				_store.connect(server, port, username, password);
