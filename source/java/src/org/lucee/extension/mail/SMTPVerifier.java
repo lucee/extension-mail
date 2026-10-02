@@ -88,17 +88,26 @@ public final class SMTPVerifier {
 		Authenticator auth = null;
 		if (hasAuth)
 			auth = new DefaultAuthenticator(username, password);
-		Session session = Session.getInstance(props, auth);
-		session.setDebug(true); // enable logging mail debugging output to console
+		// LDEV-6485: force jakarta.mail's own classloader as TCCL while creating Session/Transport
+		Thread t = Thread.currentThread();
+		ClassLoader ccl = t.getContextClassLoader();
+		t.setContextClassLoader(Session.class.getClassLoader());
+		try {
+			Session session = Session.getInstance(props, auth);
+			session.setDebug(true); // enable logging mail debugging output to console
 
-		Transport transport = session.getTransport("smtp");
-		if (hasAuth)
-			transport.connect(host, username, password);
-		else
-			transport.connect();
-		boolean rtn = transport.isConnected();
-		transport.close();
-		return rtn;
+			Transport transport = session.getTransport("smtp");
+			if (hasAuth)
+				transport.connect(host, username, password);
+			else
+				transport.connect();
+			boolean rtn = transport.isConnected();
+			transport.close();
+			return rtn;
+		}
+		finally {
+			t.setContextClassLoader(ccl);
+		}
 
 	}
 }

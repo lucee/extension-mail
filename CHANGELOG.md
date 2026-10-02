@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.9
+
+- [LDEV-6485](https://luceeserver.atlassian.net/browse/LDEV-6485) — wrap Session/Transport creation in the extension's own classloader as TCCL so jakarta.mail ServiceLoader does not pick up javax.mail providers; exclude transitive jakarta.mail 2.0.1 from commons-email2-jakarta
+
 ## 1.1.0.8
 
 - [LDEV-6455](https://luceeserver.atlassian.net/browse/LDEV-6455) — fix spooled cfmail silently dropped (`NotSerializableException: sun.nio.cs.UTF_8`); charset fields on `SMTPClient` are now held via a serializable wrapper

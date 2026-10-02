@@ -218,6 +218,13 @@
 	    <groupId>org.apache.commons</groupId>
 	    <artifactId>commons-email2-jakarta</artifactId>
 	    <version>2.0.0-M1</version>
+	    <!-- LDEV-6485: commons-email2-jakarta pulls jakarta.mail 2.0.1; we pin 2.0.2 explicitly below -->
+	    <exclusions>
+	        <exclusion>
+	            <groupId>com.sun.mail</groupId>
+	            <artifactId>jakarta.mail</artifactId>
+	        </exclusion>
+	    </exclusions>
 	</dependency>
 	
 	<!-- https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail -->
