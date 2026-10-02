@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.9
+
+- [LDEV-945](https://luceeserver.atlassian.net/browse/LDEV-945) — parse `server="user@domain:pw@host:port"` with `lastIndexOf('@')` and decode percent-encoded credentials (`%40` → `@`)
+
 ## 1.1.0.8
 
 - [LDEV-6455](https://luceeserver.atlassian.net/browse/LDEV-6455) — fix spooled cfmail silently dropped (`NotSerializableException: sun.nio.cs.UTF_8`); charset fields on `SMTPClient` are now held via a serializable wrapper
