@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.9
+
+- [LDEV-4258](https://luceeserver.atlassian.net/browse/LDEV-4258) — include every `cfmailpart` of the same type (previously only the first text/plain or text/html part was sent)
+
 ## 1.1.0.8
 
 - [LDEV-6455](https://luceeserver.atlassian.net/browse/LDEV-6455) — fix spooled cfmail silently dropped (`NotSerializableException: sun.nio.cs.UTF_8`); charset fields on `SMTPClient` are now held via a serializable wrapper
