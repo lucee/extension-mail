@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- [LDEV-945](https://luceeserver.atlassian.net/browse/LDEV-945) — parse `server="user@domain:pw@host:port"` with `lastIndexOf('@')` and decode percent-encoded credentials (`%40` → `@`)
 - [LDEV-4258](https://luceeserver.atlassian.net/browse/LDEV-4258) — include every `cfmailpart` of the same type (previously only the first text/plain or text/html part was sent)
 
 ## 1.1.0.12
