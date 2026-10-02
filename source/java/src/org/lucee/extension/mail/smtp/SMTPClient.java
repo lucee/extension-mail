@@ -471,10 +471,17 @@ public final class SMTPClient implements Serializable {
 			props.remove("mail.smtp.socketFactory.port");
 			props.remove("mail.smtp.socketFactory.fallback");
 		}
+		// LDEV-766: STARTTLS must follow the tls flag even when no username is set.
+		// Previously starttls.enable was only set inside the auth branch, so useTLS=true
+		// without a username silently sent mail in plain text.
+		// Also set starttls.required so jakarta.mail does not fall back to plain text
+		// when the server rejects STARTTLS (javax.mail already failed the send).
+		props.put("mail.smtp.starttls.enable", tls ? "true" : "false");
+		props.put("mail.smtp.starttls.required", tls ? "true" : "false");
+
 		Authenticator auth = null;
 		if (!Util.isEmpty(username)) {
 			props.put("mail.smtp.auth", "true");
-			props.put("mail.smtp.starttls.enable", tls ? "true" : "false");
 
 			props.put("mail.smtp.user", username);
 			props.put("mail.smtp.password", password);
@@ -482,7 +489,6 @@ public final class SMTPClient implements Serializable {
 			auth = new DefaultAuthenticator(username, password);
 		} else {
 			props.put("mail.smtp.auth", "false");
-			props.remove("mail.smtp.starttls.enable");
 
 			props.remove("mail.smtp.user");
 			props.remove("mail.smtp.password");

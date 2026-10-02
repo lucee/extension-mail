@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0.12
+
+- [LDEV-766](https://luceeserver.atlassian.net/browse/LDEV-766) — honour `useTLS`/`starttls` even when no SMTP username is set; also set `mail.smtp.starttls.required` so jakarta.mail does not fall back to plain text when STARTTLS fails
+
 ## 1.1.0.9
 
 - [LDEV-6485](https://luceeserver.atlassian.net/browse/LDEV-6485) — wrap Session/Transport creation in the extension's own classloader as TCCL so jakarta.mail ServiceLoader does not pick up javax.mail providers; exclude transitive jakarta.mail 2.0.1 from commons-email2-jakarta
