@@ -59,6 +59,7 @@ import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
+import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
@@ -921,17 +922,25 @@ public final class SMTPClient implements Serializable {
 					try {
 						SMTPSender sender = new SMTPSender(msgSess, server.getHostName(), server.getPort(),
 								_username, _password, recyleConnection, log);
+						// the sender is a fresh thread that would inherit the request's TCCL; give it the
+						// extension's loader, same as SMTPConnectionPool does for Session/Transport (LDEV-6485)
+						sender.setContextClassLoader(Session.class.getClassLoader());
 						sender.start();
 						sender.join(_timeout);
 
 						if (!sender.isSent()) {
 							Throwable t = sender.getThrowable();
-							if (t instanceof Error)
-								throw (Error) t;
-							if (t instanceof RuntimeException)
-								throw (RuntimeException) t;
-							if (t != null)
+							if (t instanceof VirtualMachineError)
+								throw (VirtualMachineError) t;
+							if (t instanceof Exception && !(t instanceof RuntimeException))
 								throw CFMLEngineFactory.getInstance().getCastUtil().toPageException(t);
+							if (t != null) {
+								// any other Error or RuntimeException: keep the original as cause and let the catch
+								// below log it, call the listener and fail over to the next server
+								MailException me = new MailException(t.toString());
+								me.initCause(t);
+								throw me;
+							}
 
 							// stop when still running
 							try {
@@ -962,7 +971,7 @@ public final class SMTPClient implements Serializable {
 
 							listener(config, server, log, e, System.nanoTime() - start);
 							MailException me = new MailException(server.getHostName() + " " + e.getMessage() + ":" + i);
-							me.initCause(e instanceof RuntimeException ? e : e.getCause());
+							me.initCause(e.getCause() != null ? e.getCause() : e);
 							throw me;
 						}
 					}
