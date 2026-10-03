@@ -114,8 +114,9 @@ public final class SMTPSender extends Thread {
 					}
 					SMTPConnectionPool.disconnect(mmas.session.transport);
 				}
-			} catch (Exception e) {
-				// TODO log
+			} catch (Throwable t) {
+				if (log != null)
+					log.log(Log.LEVEL_ERROR, "mail", "failed to release session and transport", t);
 			}
 		}
 	}
