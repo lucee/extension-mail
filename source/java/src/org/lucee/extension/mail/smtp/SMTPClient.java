@@ -919,18 +919,19 @@ public final class SMTPClient implements Serializable {
 						throw me;
 					}
 					try {
-						SerializableObject lock = new SerializableObject();
-						SMTPSender sender = new SMTPSender(lock, msgSess, server.getHostName(), server.getPort(),
+						SMTPSender sender = new SMTPSender(msgSess, server.getHostName(), server.getPort(),
 								_username, _password, recyleConnection, log);
 						sender.start();
-						synchronized (lock) {
-							lock.wait(_timeout);
-						}
+						sender.join(_timeout);
 
 						if (!sender.isSent()) {
 							Throwable t = sender.getThrowable();
+							if (t instanceof Error)
+								throw (Error) t;
+							if (t instanceof RuntimeException)
+								throw (RuntimeException) t;
 							if (t != null)
-								throw CFMLEngineFactory.getInstance().getCastUtil().toPageException(new Exception(t));
+								throw CFMLEngineFactory.getInstance().getCastUtil().toPageException(t);
 
 							// stop when still running
 							try {
@@ -946,10 +947,8 @@ public final class SMTPClient implements Serializable {
 							}
 						}
 						// could have an exception but was send anyway
-						if (sender.getThrowable() != null) {
-							Throwable t = new Exception(sender.getThrowable());
-							if (log != null)
-								log.log(Log.LEVEL_ERROR, "send mail", t);
+						if (sender.getThrowable() != null && log != null) {
+							log.log(Log.LEVEL_ERROR, "send mail", sender.getThrowable());
 						}
 						clean(config, attachmentz);
 
@@ -963,7 +962,7 @@ public final class SMTPClient implements Serializable {
 
 							listener(config, server, log, e, System.nanoTime() - start);
 							MailException me = new MailException(server.getHostName() + " " + e.getMessage() + ":" + i);
-							me.initCause(e.getCause());
+							me.initCause(e instanceof RuntimeException ? e : e.getCause());
 							throw me;
 						}
 					}

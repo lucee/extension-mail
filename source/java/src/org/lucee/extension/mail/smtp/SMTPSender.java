@@ -28,9 +28,8 @@ import lucee.loader.util.Util;
 
 public final class SMTPSender extends Thread {
 
-	private boolean isSent = false;
-	private Exception throwable;
-	private Object lock;
+	private volatile boolean isSent = false;
+	private volatile Throwable throwable;
 	private String host;
 	private int port;
 	private String user;
@@ -39,9 +38,8 @@ public final class SMTPSender extends Thread {
 	private boolean recyleConnection;
 	private Log log;
 
-	public SMTPSender(Object lock, MimeMessageAndSession mmas, String host, int port, String user, String pass,
+	public SMTPSender(MimeMessageAndSession mmas, String host, int port, String user, String pass,
 			boolean reuseConnection, Log log) {
-		this.lock = lock;
 		this.mmas = mmas;
 
 		this.host = host;
@@ -99,8 +97,8 @@ public final class SMTPSender extends Thread {
 			if (valid != null && valid.length > 0)
 				isSent = true;
 			this.throwable = sfe;
-		} catch (Exception e) {
-			this.throwable = e;
+		} catch (Throwable t) {
+			this.throwable = t;
 		} finally {
 			try {
 				if (recyleConnection) {
@@ -118,9 +116,6 @@ public final class SMTPSender extends Thread {
 				}
 			} catch (Exception e) {
 				// TODO log
-			}
-			synchronized (lock) {
-				lock.notify();
 			}
 		}
 	}
