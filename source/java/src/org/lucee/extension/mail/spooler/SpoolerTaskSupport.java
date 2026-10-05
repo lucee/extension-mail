@@ -85,32 +85,65 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 	}
 
 	final void _execute(Config config) throws PageException {
-
-		lastExecution = System.currentTimeMillis();
-		tries++;
-		CFMLEngine eng = CFMLEngineFactory.getInstance();
-
-		if (exceptions == null)
-			exceptions = eng.getCreationUtil().createArray();
-
+		started();
 		try {
 			execute(config);
 		} catch (Exception e) {
-			PageException pe = eng.getCastUtil().toPageException(e);
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
-			Struct sct = eng.getCreationUtil().createStruct();
-			sct.setEL("message", pe.getMessage());
-			sct.setEL("detail", pe.getDetail());
-			sct.setEL("stacktrace", sw.toString());
-			sct.setEL("time", eng.getCastUtil().toLong(System.currentTimeMillis()));
-			exceptions.appendEL(sct);
-
-			throw pe;
+			throw failed(e);
 		} finally {
 			lastExecution = System.currentTimeMillis();
 		}
+	}
+
+	/**
+	 * Count this try. Lucee core only does this bookkeeping for its own
+	 * SpoolerTaskSupport and calls execute(Config) directly for tasks of the
+	 * extension, so execute() has to call this itself, otherwise "tries" stays 0
+	 * and the execution plan never advances (the task is retried every minute
+	 * forever, LDEV-3092).
+	 */
+	protected final void started() {
+		lastExecution = System.currentTimeMillis();
+		tries++;
+		if (exceptions == null)
+			exceptions = CFMLEngineFactory.getInstance().getCreationUtil().createArray();
+	}
+
+	/**
+	 * keep the exception of a failed try (shown in the admin task list) and
+	 * return it as PageException to rethrow
+	 */
+	protected final PageException failed(Exception e) {
+		CFMLEngine eng = CFMLEngineFactory.getInstance();
+		PageException pe = eng.getCastUtil().toPageException(e);
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		Struct sct = eng.getCreationUtil().createStruct();
+		sct.setEL("message", pe.getMessage());
+		sct.setEL("detail", pe.getDetail());
+		sct.setEL("stacktrace", sw.toString());
+		sct.setEL("time", eng.getCastUtil().toLong(System.currentTimeMillis()));
+		if (exceptions == null)
+			exceptions = eng.getCreationUtil().createArray();
+		exceptions.appendEL(sct);
+		lastExecution = System.currentTimeMillis();
+		return pe;
+	}
+
+	/**
+	 * the task failed in a way another try cannot fix: use up the execution plan,
+	 * so the spooler closes the task instead of rescheduling it
+	 */
+	protected final void noMoreTries() {
+		int max = 0;
+		if (plans != null) {
+			for (ExecutionPlan plan : plans) {
+				max += plan.getTries();
+			}
+		}
+		if (tries < max)
+			tries = max;
 	}
 
 	@Override

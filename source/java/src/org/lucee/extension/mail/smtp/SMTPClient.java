@@ -775,6 +775,22 @@ public final class SMTPClient implements Serializable {
 	}
 
 	/**
+	 * @return the path of the first attachment file that does not exist (anymore),
+	 *         or null if all attachment files exist (URL attachments are not
+	 *         checked)
+	 */
+	public String getMissingAttachment(lucee.runtime.config.Config config) {
+		if (attachmentz == null)
+			return null;
+		for (Attachment att : attachmentz) {
+			String path = att.getAbsolutePath();
+			if (!Util.isEmpty(path) && !config.getResource(path).exists())
+				return path;
+		}
+		return null;
+	}
+
+	/**
 	 * @param file
 	 * @throws MessagingException
 	 */
