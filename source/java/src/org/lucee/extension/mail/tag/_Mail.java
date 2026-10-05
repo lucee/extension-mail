@@ -300,7 +300,7 @@ public abstract class _Mail extends TagImpl {
 				required(getTagName(), action, "name", name);
 				pageContext.setVariable(name, client.getMails(messageNumber, uid, true, folder));
 			} else if (action.equals("delete")) {
-				client.deleteMails(messageNumber, uid);
+				client.deleteMails(messageNumber, uid, folder);
 			}
 
 			// imap only

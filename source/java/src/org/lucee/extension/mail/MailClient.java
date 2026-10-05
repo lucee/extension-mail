@@ -284,18 +284,25 @@ public abstract class MailClient implements PoolItem {
 	protected abstract int getType();
 
 	/**
-	 * delete all message in ibox that match given criteria
+	 * delete all message in the given folder (INBOX by default) that match given criteria
 	 * 
 	 * @param messageNumber
 	 * @param uid
+	 * @param folderName
 	 * @throws MessagingException
 	 * @throws IOException
 	 * @throws PageException
 	 */
-	public void deleteMails(String messageNumber, String uid) throws MessagingException, IOException, PageException {
+	public void deleteMails(String messageNumber, String uid, String folderName)
+			throws MessagingException, IOException, PageException {
 		Folder folder;
 		Message amessage[];
-		folder = _store.getFolder("INBOX");
+		// LDEV-5823: honour the folder attribute instead of always using INBOX
+		if (Util.isEmpty(folderName, true))
+			folderName = "INBOX";
+		else
+			folderName = folderName.trim();
+		folder = _store.getFolder(folderName);
 		folder.open(2);
 		Map<String, Message> map = getMessages(null, folder, uid, messageNumber, startrow, maxrows, false);
 		Iterator<String> iterator = map.keySet().iterator();
