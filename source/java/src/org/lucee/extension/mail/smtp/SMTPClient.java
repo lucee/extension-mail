@@ -458,6 +458,12 @@ public final class SMTPClient implements Serializable {
 		props.put("mail.smtp.connectiontimeout", strTimeout);
 		props.put("mail.smtp.sendpartial", CFMLEngineFactory.getInstance().getCastUtil().toString(sendPartial));
 		props.put("mail.smtp.userset", userset);
+		// LDEV-3845: an address with a non-ASCII local part can only be sent with SMTPUTF8 (RFC 6531).
+		// jakarta.mail then adds SMTPUTF8 to MAIL FROM and writes the addresses as UTF-8, if the server
+		// advertises it. Only for such mails, so plain ASCII mail is unchanged (non-ASCII domains are
+		// already converted to their IDNA form by MailUtil.fixIDN).
+		if (hasNonAsciiAddress())
+			props.put("mail.mime.allowutf8", "true");
 
 		if (port > 0) {
 			props.put("mail.smtp.port", CFMLEngineFactory.getInstance().getCastUtil().toString(port));
@@ -623,7 +629,8 @@ public final class SMTPClient implements Serializable {
 		String str;
 		while (e.hasMoreElements()) {
 			str = CFMLEngineFactory.getInstance().getCastUtil().toString(e.nextElement(), null);
-			if (!Util.isEmpty(str) && str.startsWith("mail.smtp."))
+			// mail.mime.allowutf8 changes how the transport writes commands, so it has to be part of the pool key
+			if (!Util.isEmpty(str) && (str.startsWith("mail.smtp.") || str.equals("mail.mime.allowutf8")))
 				names.add(str);
 
 		}
@@ -660,6 +667,26 @@ public final class SMTPClient implements Serializable {
 				return e.getValue();
 		}
 		return null;
+	}
+
+	private boolean hasNonAsciiAddress() {
+		return hasNonAsciiAddress(from) || hasNonAsciiAddress(tos) || hasNonAsciiAddress(ccs)
+				|| hasNonAsciiAddress(bccs) || hasNonAsciiAddress(rts) || hasNonAsciiAddress(fts);
+	}
+
+	private static boolean hasNonAsciiAddress(InternetAddress... ias) {
+		if (ias == null)
+			return false;
+		for (InternetAddress ia : ias) {
+			String addr = ia == null ? null : ia.getAddress();
+			if (addr == null)
+				continue;
+			for (int i = 0; i < addr.length(); i++) {
+				if (addr.charAt(i) > 127)
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private void checkAddress(InternetAddress[] ias, Charset charset) { // DIFF 23
