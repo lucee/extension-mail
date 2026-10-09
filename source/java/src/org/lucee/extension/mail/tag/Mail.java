@@ -610,19 +610,28 @@ public final class Mail extends BodyTagImpl {
 			if (!smtp.hasHTMLText())
 				smtp.setHTMLText(part.getBody(), part.getCharset());
 			else if (hasBody(part)) {
-				if (part.getType() == null)
-					part.setType("text/html");
+				normalizeType(part, "text/html");
 				addBodyPart(part);
 			}
 		} else {
 			if (!smtp.hasPlainText())
 				smtp.setPlainText(part.getBody(), part.getCharset());
 			else if (hasBody(part)) {
-				if (part.getType() == null)
-					part.setType("text/plain");
+				normalizeType(part, "text/plain");
 				addBodyPart(part);
 			}
 		}
+	}
+
+	/**
+	 * An extra part keeps its type as written in cfmailpart, which can be a short
+	 * form like "html", "htm", "text" or "plain". That is used as the part's MIME
+	 * type, and jakarta.mail then fails the whole send ("In Content-Type string
+	 * <html>, expected '/'"). Use the full MIME type, with the part's charset.
+	 */
+	private static void normalizeType(org.lucee.extension.mail.MailPart part, String mimeType) {
+		Charset cs = part.getCharset();
+		part.setType(cs == null ? mimeType : mimeType + "; charset=" + cs.name());
 	}
 
 	private static boolean hasBody(org.lucee.extension.mail.MailPart part) {
