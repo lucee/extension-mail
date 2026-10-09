@@ -1064,23 +1064,23 @@ public final class SMTPClient implements Serializable {
 	}
 
 	/*
-	 * Users can opt-in to the old Lucee behavior of allowing HTML emails to be sent
-	 * using 7bit encoding. When 7bit transfer encoding is used, content must be
-	 * wrapped to less than 1,000 characters per line.
-	 * 
-	 * The new default behavior for sending HTML emails is to use "quoted-printable"
-	 * encoding, encodings non-ASCII characters and automatically wraps lines to 76
-	 * characters wide, but encodes word breaks. This allows for strings longer than
-	 * 1000 characters to be included in the output and still have the output
-	 * conform to the SMTP RFCs.
-	 * 
+	 * HTML parts are sent "quoted-printable" by default (LDEV-4039, LDEV-6545):
+	 * quoted-printable wraps lines at 76 characters with soft line breaks, so long
+	 * lines (minified CSS, long links) survive unchanged, and non-ASCII characters
+	 * are encoded. This is also what ACF does.
+	 *
+	 * Set the system property / environment variable
+	 * "lucee.mail.use.7bit.transfer.encoding.for.html.parts" to "true" to opt in to
+	 * the old behavior of sending HTML parts as 7bit, wrapped at whitespace to 998
+	 * characters per line.
+	 *
 	 * https://stackoverflow.com/questions/25710599/content-transfer-encoding-7bit-
 	 * or-8-bit/28531705# 28531705
 	 */
 	private boolean isUse7bitHtmlEncoding() {
 		try {
 			return CFMLEngineFactory.getInstance().getCastUtil().toBoolean(
-					Util.getSystemPropOrEnvVar("lucee.mail.use.7bit.transfer.encoding.for.html.parts", "true"));
+					Util.getSystemPropOrEnvVar("lucee.mail.use.7bit.transfer.encoding.for.html.parts", "false"));
 		} catch (Throwable t) {
 			return false;
 		}
@@ -1091,28 +1091,25 @@ public final class SMTPClient implements Serializable {
 			htmlTextCharset = CharsetSerializable.of(getMailDefaultCharset(config));
 		Charset htmlTextCs = htmlTextCharset.toCharset();
 
-		String transferEncoding;
+		String transferEncoding = "quoted-printable";
+		StringDataSource source = null;
 
-		/*
-		 * Set the "lucee.mail.use.7bit.transfer.encoding.for.html.parts" system
-		 * property to "false" to force the previous behavior of using 7bit transfer
-		 * encoding.
-		 */
 		if (isUse7bitHtmlEncoding()) {
-			transferEncoding = "7bit";
-			// when using 7bit, we must always wrap lines
-			mp.setDataHandler(new DataHandler(new StringDataSource(htmlText, TEXT_HTML, htmlTextCs, 998)));
-			/*
-			 * The default behavior is to using "quoted-printable" for HTML emails. This
-			 * will force wrapping of lines to 76 characters and encoded any non-ASCII
-			 * characters.
-			 * 
-			 * ACF uses this encoded for all HTML parts.
-			 */
-		} else {
-			transferEncoding = "quoted-printable";
-			mp.setDataHandler(new DataHandler(new StringDataSource(htmlText, TEXT_HTML, htmlTextCs)));
+			// 7bit opt-out: lines must be wrapped to 998 characters (RFC 5322). Wrapping
+			// only breaks at whitespace, so a line without any (e.g. a long link) can stay
+			// longer; such a part falls back to quoted-printable instead of going out
+			// invalid.
+			StringDataSource wrapped = new StringDataSource(htmlText, TEXT_HTML, htmlTextCs,
+					StringDataSource.MAX_LINE_LENGTH);
+			if (!wrapped.hasLineLongerThan(StringDataSource.MAX_LINE_LENGTH)) {
+				transferEncoding = "7bit";
+				source = wrapped;
+			}
 		}
+		// quoted-printable wraps lines itself, so the text is passed on unchanged
+		if (source == null)
+			source = new StringDataSource(htmlText, TEXT_HTML, htmlTextCs);
+		mp.setDataHandler(new DataHandler(source));
 
 		// headers must always be set after data handler is set or the headers will be
 		// replaced
@@ -1149,7 +1146,7 @@ public final class SMTPClient implements Serializable {
 		 * HTML parts are encoded as "quoted-printable", which is automatically wrapped
 		 * to 76 characters per line, so we do not need to wrap these lines.
 		 */
-		if ((part.getType() == "text/html") && !isUse7bitHtmlEncoding()) {
+		if (isHTMLType(part.getType()) && !isUse7bitHtmlEncoding()) {
 			partSource = new StringDataSource(part.getBody(), part.getType(), cs);
 		} else {
 			partSource = new StringDataSource(part.getBody(), part.getType(), cs, 998);
@@ -1157,6 +1154,21 @@ public final class SMTPClient implements Serializable {
 
 		mbp.setDataHandler(new DataHandler(partSource));
 		return mbp;
+	}
+
+	/**
+	 * true if the given MIME type is text/html, ignoring case and parameters (e.g.
+	 * "TEXT/HTML; charset=UTF-8"); also accepts the short forms "html" and "htm" the
+	 * cfmailpart type attribute allows
+	 */
+	static boolean isHTMLType(String type) {
+		if (type == null)
+			return false;
+		int index = type.indexOf(';');
+		if (index != -1)
+			type = type.substring(0, index);
+		type = type.trim();
+		return TEXT_HTML.equalsIgnoreCase(type) || "html".equalsIgnoreCase(type) || "htm".equalsIgnoreCase(type);
 	}
 
 	private Charset getMailDefaultCharset(Config config) {
