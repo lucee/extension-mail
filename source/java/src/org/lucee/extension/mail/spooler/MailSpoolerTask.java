@@ -18,6 +18,11 @@ import lucee.runtime.spooler.ExecutionPlan;
 import lucee.runtime.type.Struct;
 
 public final class MailSpoolerTask extends SpoolerTaskSupport {
+
+	// LDEV-3213: pinned to the value Java computed for every release so far (1.1.0.8-RC to 1.1.0.13), so queued
+	// mails (.tsk files) stay readable when this class changes.
+	private static final long serialVersionUID = 6690233946508798338L;
+
 	private static final ExecutionPlan[] EXECUTION_PLANS = new ExecutionPlan[] { new ExecutionPlanImpl(1, 60),
 			new ExecutionPlanImpl(1, 5 * 60), new ExecutionPlanImpl(1, 3600), new ExecutionPlanImpl(2, 24 * 3600), };
 
@@ -182,6 +187,10 @@ public final class MailSpoolerTask extends SpoolerTaskSupport {
 	}
 
 	public static class ExecutionPlanImpl implements ExecutionPlan {
+
+		// LDEV-3213: pinned to the value Java computed for every release so far (1.1.0.8-RC to 1.1.0.13), so queued
+		// mails (.tsk files) stay readable when this class changes.
+		private static final long serialVersionUID = -9000557328580396853L;
 
 		private int tries;
 		private int interval;

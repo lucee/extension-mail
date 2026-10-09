@@ -27,6 +27,10 @@ import lucee.loader.util.Util;
 
 public final class Attachment implements Serializable {
 
+	// LDEV-3213: pinned to the value Java computed for every release so far (1.1.0.8-RC to 1.1.0.13), so queued
+	// mails (.tsk files) stay readable when this class changes.
+	private static final long serialVersionUID = -2819067813866402187L;
+
 	private String absolutePath;
 	private URL url;
 	private String type;
