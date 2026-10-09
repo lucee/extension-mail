@@ -3,6 +3,7 @@
 ## Unreleased
 
 - [LDEV-4258](https://luceeserver.atlassian.net/browse/LDEV-4258) — include every `cfmailpart` of the same type (previously only the first text/plain or text/html part was sent)
+- [LDEV-6545](https://luceeserver.atlassian.net/browse/LDEV-6545) — send HTML mail parts `quoted-printable` by default again (LDEV-5176 had flipped the default to `7bit`, so long HTML lines were split at 998 characters); `lucee.mail.use.7bit.transfer.encoding.for.html.parts=true` still opts in to `7bit`, but falls back to `quoted-printable` for a part whose lines cannot be wrapped to 998 characters; extra `text/html` parts are now recognised regardless of case and as `html`/`htm`
 
 ## 1.1.0.12
 

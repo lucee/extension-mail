@@ -39,6 +39,11 @@ public final class StringDataSource implements DataSource {
 	public final static char CR = (char) 13;
 	public final static char LF = (char) 10;
 
+	/**
+	 * maximum line length without CRLF allowed by RFC 5322 for 7bit/8bit content
+	 */
+	public final static int MAX_LINE_LENGTH = 998;
+
 	/*
 	 * Some types of transfer encoding such as "quoted-printable" and "base64" do
 	 * not require wrapping of lines, because it's handled automatically in the
@@ -75,6 +80,22 @@ public final class StringDataSource implements DataSource {
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		throw new IOException("no access to write");
+	}
+
+	/**
+	 * true if the text contains a line (without its line break) that is longer than
+	 * the given length
+	 */
+	public boolean hasLineLongerThan(int maxLineLength) {
+		int len = 0;
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			if (c == CR || c == LF)
+				len = 0;
+			else if (++len > maxLineLength)
+				return true;
+		}
+		return false;
 	}
 
 	public static String wrapText(String text, int maxLineLength) {
