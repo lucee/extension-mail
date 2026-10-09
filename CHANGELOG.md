@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- [LDEV-4258](https://luceeserver.atlassian.net/browse/LDEV-4258) — include every `cfmailpart` of the same type (previously only the first text/plain or text/html part was sent)
+
 ## 1.1.0.12
 
 - [LDEV-766](https://luceeserver.atlassian.net/browse/LDEV-766) — honour `useTLS`/`starttls` even when no SMTP username is set; also set `mail.smtp.starttls.required` so jakarta.mail does not fall back to plain text when STARTTLS fails
