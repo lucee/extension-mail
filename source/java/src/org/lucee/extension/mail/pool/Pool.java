@@ -40,7 +40,7 @@ public final class Pool {
 		PoolItemWrap item = map.get(id);
 		if (item == null)
 			return null;
-		if ((item.lastAccess() + maxIdle) < now || !item.getValue().isValid()) {
+		if (isIdle(item, now) || !item.getValue().isValid()) {
 			item.end();
 			stopControllerIfNecessary();
 			return null;
@@ -79,7 +79,7 @@ public final class Pool {
 			e = it.next();
 			long now = System.currentTimeMillis();
 			try {
-				if (force || ((e.getValue().lastAccess() + maxIdle) < now)) {
+				if (force || isIdle(e.getValue(), now)) {
 					e.getValue().end();
 					keysToRem.add(e.getKey());
 					// map.remove(e.getKey());
@@ -97,6 +97,13 @@ public final class Pool {
 		}
 
 		stopControllerIfNecessary();
+	}
+
+	// LDEV-4220: an item that is still in use (e.g. a long getAll on a slow server) is never idle, otherwise the
+	// controller closes its store and the running action fails with "This operation is not allowed on a closed folder"
+	private boolean isIdle(PoolItemWrap item, long now) {
+		PoolItem value = item.getValue();
+		return !value.isInUse() && (Math.max(item.lastAccess(), value.lastUsed()) + maxIdle) < now;
 	}
 
 	private void shrinkIfNecessary() {

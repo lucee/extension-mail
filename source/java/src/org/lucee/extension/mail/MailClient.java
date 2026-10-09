@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.mail2.jakarta.DefaultAuthenticator;
 import org.lucee.extension.mail.imap.ImapClient;
@@ -52,10 +53,12 @@ import jakarta.mail.UIDFolder;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
+import lucee.commons.io.log.Log;
 import lucee.commons.io.res.Resource;
 import lucee.loader.engine.CFMLEngine;
 import lucee.loader.engine.CFMLEngineFactory;
 import lucee.loader.util.Util;
+import lucee.runtime.config.Config;
 import lucee.runtime.exp.PageException;
 import lucee.runtime.type.Array;
 import lucee.runtime.type.Query;
@@ -109,6 +112,8 @@ public abstract class MailClient implements PoolItem {
 	private static Pool pool = new Pool(60000, 100, 5000);
 	private String delimiter = ",";
 	private boolean stopOnError = true;
+	private final AtomicInteger inUse = new AtomicInteger();
+	private volatile long lastUsed;
 
 	public static MailClient getInstance(int type, String server, int port, String username, String password,
 			boolean secure, String name, String id) throws Exception {
@@ -135,6 +140,29 @@ public abstract class MailClient implements PoolItem {
 				pool.put(uid, item = new ImapClient(server, port, username, password, secure));
 		}
 		return (MailClient) item;
+	}
+
+	/**
+	 * marks the client as in use, so the pool does not end it while an action is running (LDEV-4220), every call
+	 * needs a matching {@link #release()}
+	 */
+	public void acquire() {
+		inUse.incrementAndGet();
+	}
+
+	public void release() {
+		lastUsed = System.currentTimeMillis();
+		inUse.decrementAndGet();
+	}
+
+	@Override
+	public boolean isInUse() {
+		return inUse.get() > 0;
+	}
+
+	@Override
+	public long lastUsed() {
+		return lastUsed;
 	}
 
 	public static void removeInstance(MailClient client) throws Exception {
@@ -304,14 +332,17 @@ public abstract class MailClient implements PoolItem {
 		while (iterator.hasNext()) {
 			amessage[i++] = map.get(iterator.next());
 		}
+		boolean failed = true;
 		try {
 			folder.setFlags(amessage, new Flags(Flags.Flag.DELETED), true);
+			failed = false;
 		} catch (MessagingException e) {
 			if (this.stopOnError) {
 				throw e;
 			}
+			failed = false;
 		} finally {
-			folder.close(true);
+			closeFolder(folder, true, failed);
 		}
 	}
 
@@ -347,16 +378,39 @@ public abstract class MailClient implements PoolItem {
 
 		Folder folder = _store.getFolder(folderName);
 		folder.open(Folder.READ_ONLY);
+		boolean failed = true;
 		try {
 			getMessages(qry, folder, uids, messageNumbers, startrow, maxrows, all);
+			failed = false;
 		} catch (MessagingException e) {
 			if (this.stopOnError) {
 				throw e;
 			}
+			failed = false;
 		} finally {
-			folder.close(false);
+			closeFolder(folder, false, failed);
 		}
 		return qry;
+	}
+
+	/**
+	 * LDEV-4220: only close a folder that is still open (the server or a dropped connection may have closed it
+	 * already), and when the action already failed, don't let an error on close hide the original one, log it
+	 * instead.
+	 */
+	private void closeFolder(Folder folder, boolean expunge, boolean failed) throws MessagingException {
+		if (!folder.isOpen())
+			return;
+		try {
+			folder.close(expunge);
+		} catch (MessagingException | RuntimeException e) {
+			if (!failed)
+				throw e;
+			Config config = CFMLEngineFactory.getInstance().getThreadConfig();
+			Log log = config == null ? null : config.getLog("mail");
+			if (log != null)
+				log.log(Log.LEVEL_ERROR, "mail", "failed to close folder [" + folder.getFullName() + "]", e);
+		}
 	}
 
 	private void toQuery(Query qry, Message message, Object uid, boolean all) throws MessagingException {
