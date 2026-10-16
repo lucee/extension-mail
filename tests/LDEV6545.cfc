@@ -97,6 +97,22 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" javaSettings
 				expectValidLines( msg );
 			});
 
+			it( title="wraptext wraps long lines at spaces without commons-text", body=function( currentSpec ) {
+				var body = repeatString( "lorem ipsum ", 20 ) & repeatString( "y", 50 ) & " end";
+				var msg = send( function( subject ) {
+					mail to=variables.to from=variables.from subject=arguments.subject type="text" wraptext=30 spoolEnable=false server="localhost" port=variables.port {
+						echo( body );
+					}
+				});
+				var lines = listToArray( toString( msg.getContent() ), "#chr( 13 )##chr( 10 )#" );
+				expect( arrayLen( lines ) ).toBeGT( 1 );
+				loop array=lines item="local.l" {
+					// only the unbreakable 50 char word may exceed the wrap length
+					if ( l != repeatString( "y", 50 ) ) expect( len( l ) ).toBeLTE( 30, "line too long: [#l#]" );
+				}
+				expect( arrayToList( lines, " " ) ).toBe( trim( body ) );
+			});
+
 		});
 	}
 
