@@ -290,6 +290,8 @@ public abstract class _Mail extends TagImpl {
 			messageNumber = null;
 		client.stopOnError((getType() == MailClient.TYPE_IMAP) ? stopOnError : false);
 
+		// LDEV-4220: keep the pool from closing the client while this action runs
+		client.acquire();
 		try {
 			// client.connect();
 
@@ -337,7 +339,7 @@ public abstract class _Mail extends TagImpl {
 		} catch (Exception e) {
 			throw CFMLEngineFactory.getInstance().getCastUtil().toPageException(e);
 		} finally {
-			// client.disconnectEL();
+			client.release();
 		}
 		return SKIP_BODY;
 	}
