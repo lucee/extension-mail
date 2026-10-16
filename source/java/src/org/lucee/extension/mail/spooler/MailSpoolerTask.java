@@ -9,6 +9,7 @@ import org.lucee.extension.mail.smtp.SMTPClient;
 
 import jakarta.mail.internet.InternetAddress;
 import lucee.loader.engine.CFMLEngineFactory;
+import lucee.commons.io.log.Log;
 import lucee.loader.util.Util;
 import lucee.runtime.config.Config;
 import lucee.runtime.config.ConfigWeb;
@@ -123,6 +124,17 @@ public final class MailSpoolerTask extends SpoolerTaskSupport {
 	@Override
 	protected Object doExecute(Config config) throws PageException {
 		try {
+			// a missing attachment file will not come back, so don't retry (LDEV-3092)
+			String missing = client.getMissingAttachment(config);
+			if (missing != null) {
+				noMoreTries();
+				String msg = "spooled mail [" + client.getSubject() + "] cannot be sent, the attachment file [" + missing
+						+ "] does not exist; the mail will not be retried";
+				Log log = config.getLog("mail");
+				if (log != null)
+					log.error("mail", msg);
+				throw new MailException(msg);
+			}
 			client._send((ConfigWeb) config, servers);
 		} catch (MailException e) {
 			throw CFMLEngineFactory.getInstance().getCastUtil().toPageException(e);

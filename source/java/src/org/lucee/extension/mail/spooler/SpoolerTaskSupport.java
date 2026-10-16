@@ -128,6 +128,21 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 	 */
 	protected abstract Object doExecute(Config config) throws PageException;
 
+	/**
+	 * Called from doExecute() when the task failed in a way another try cannot fix (LDEV-3092): uses up
+	 * the execution plan, so the spooler closes the task instead of rescheduling it. The current try was
+	 * already counted by execute(Config).
+	 */
+	protected final void noMoreTries() {
+		int max = 0;
+		if (plans != null) {
+			for (ExecutionPlan plan : plans) {
+				max += plan.getTries();
+			}
+		}
+		if (tries < max) tries = max;
+	}
+
 	@Override
 	public final Array getExceptions() {
 		return exceptions;

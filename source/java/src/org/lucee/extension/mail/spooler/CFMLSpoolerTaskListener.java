@@ -68,7 +68,7 @@ public abstract class CFMLSpoolerTaskListener {
 			args.set("detail", details);
 
 			args.set("tries", task.tries());
-			args.set("remainingtries", e == null ? 0 : task.getPlans().length - task.tries());
+			args.set("remainingtries", e == null ? 0 : Math.max(0, task.getPlans().length - task.tries()));
 			args.set("closed", task.closed());
 			if (!before)
 				args.set("passed", e == null);
