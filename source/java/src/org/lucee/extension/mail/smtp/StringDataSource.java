@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
-import org.apache.commons.text.WordUtils;
 
 import jakarta.activation.DataSource;
 import lucee.loader.util.Util;
@@ -111,10 +110,50 @@ public final class StringDataSource implements DataSource {
 
 			line = scanner.nextLine();
 			if (line.length() > maxLineLength)
-				line = WordUtils.wrap(line, maxLineLength);
+				line = wrapLine(line, maxLineLength);
 			sb.append(line).append(CR).append(LF);
 		}
 
+		return sb.toString();
+	}
+
+	/**
+	 * Wraps a single line at spaces so no segment exceeds wrapLength, unless a single word is
+	 * longer (long words are not broken). Same behavior as commons-text
+	 * WordUtils.wrap(str, wrapLength), which is not available on Lucee 8.
+	 */
+	static String wrapLine(String str, int wrapLength) {
+		if (str == null) return null;
+		if (wrapLength < 1) wrapLength = 1;
+		final String nl = System.lineSeparator();
+		final int len = str.length();
+		final StringBuilder sb = new StringBuilder(len + 32);
+		int offset = 0;
+		while (offset < len) {
+			// skip a leading space of a new segment
+			if (str.charAt(offset) == ' ') {
+				offset++;
+				continue;
+			}
+			if (len - offset <= wrapLength) break;
+			int spaceAt = str.lastIndexOf(' ', offset + wrapLength);
+			if (spaceAt >= offset) {
+				sb.append(str, offset, spaceAt).append(nl);
+				offset = spaceAt + 1;
+			}
+			else {
+				spaceAt = str.indexOf(' ', offset + wrapLength);
+				if (spaceAt >= 0) {
+					sb.append(str, offset, spaceAt).append(nl);
+					offset = spaceAt + 1;
+				}
+				else {
+					sb.append(str, offset, len);
+					offset = len;
+				}
+			}
+		}
+		sb.append(str, offset, len);
 		return sb.toString();
 	}
 
