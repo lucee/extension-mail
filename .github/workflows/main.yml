@@ -165,10 +165,21 @@ jobs:
           print(f"pom.xml version is now {new}")
           PY
 
+      # Maven 3.10.0 rejects the duplicate maven-dependency-plugin declaration in source/java/pom.xml
+      # (and breaks the Central bundle, see deploy), so build with 3.9.16 too.
+      - name: Use Maven 3.9.16
+        run: |
+          MVN_VERSION=3.9.16
+          BASE=https://repo1.maven.org/maven2/org/apache/maven/apache-maven/$MVN_VERSION
+          curl -fsSL -o "$RUNNER_TEMP/maven.tar.gz" "$BASE/apache-maven-$MVN_VERSION-bin.tar.gz"
+          echo "$(curl -fsSL "$BASE/apache-maven-$MVN_VERSION-bin.tar.gz.sha512")  $RUNNER_TEMP/maven.tar.gz" | sha512sum -c -
+          tar xzf "$RUNNER_TEMP/maven.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/apache-maven-$MVN_VERSION/bin" >> "$GITHUB_PATH"
+
       - name: Build and Install with Maven
         run: |
           echo "------- Maven Install -------";
-          mvn -B -e -f pom.xml clean install
+          mvn -B -e -f pom.xml clean install -Dgoal=install
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -273,14 +284,14 @@ jobs:
           set -euo pipefail
           if [[ "$VERSION" == *-SNAPSHOT ]]; then
             echo "------- Maven Deploy snapshot ${VERSION} on ${{ github.event_name }} -------";
-            mvn -B -e -f pom.xml clean deploy --settings maven-settings.xml
+            mvn -B -e -f pom.xml clean deploy -Dgoal=deploy --settings maven-settings.xml
           elif [[ "$VERSION" =~ -(RC|BETA|ALPHA)$ ]]; then
             # pre-releases are not published to Maven Central, only to S3 (s3 job below)
             echo "------- Maven Install (signed) ${VERSION} on ${{ github.event_name }}, S3 only -------";
-            mvn -B -e -f pom.xml clean install -DperformRelease=true --settings maven-settings.xml
+            mvn -B -e -f pom.xml clean install -Dgoal=install -DperformRelease=true --settings maven-settings.xml
           else
             echo "------- Maven Deploy release ${VERSION} on ${{ github.event_name }} -------";
-            mvn -B -e -f pom.xml clean deploy -DperformRelease=true --settings maven-settings.xml
+            mvn -B -e -f pom.xml clean deploy -Dgoal=deploy -DperformRelease=true --settings maven-settings.xml
           fi
 
       # everything the S3 upload needs (LDEV-6568): full and lite .lex plus the flattened POM
