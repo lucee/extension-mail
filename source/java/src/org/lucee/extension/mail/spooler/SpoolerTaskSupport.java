@@ -84,7 +84,17 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 		return tries;
 	}
 
-	final void _execute(Config config) throws PageException {
+	/**
+	 * Runs the task and does the retry bookkeeping (last execution, tries, exceptions).
+	 * <p>
+	 * Lucee core's SpoolerEngineImpl only does this bookkeeping for its own
+	 * lucee.runtime.spooler.SpoolerTaskSupport (via _execute); for every other SpoolerTask it calls
+	 * execute(Config) directly. This class is the extension's own copy, so the bookkeeping has to happen
+	 * here, otherwise a failing task never counts its tries, never backs off and is never closed
+	 * (LDEV-6597). Core never calls anything else on this class, so tries are counted exactly once.
+	 */
+	@Override
+	public final Object execute(Config config) throws PageException {
 
 		lastExecution = System.currentTimeMillis();
 		tries++;
@@ -94,7 +104,7 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 			exceptions = eng.getCreationUtil().createArray();
 
 		try {
-			execute(config);
+			return doExecute(config);
 		} catch (Exception e) {
 			PageException pe = eng.getCastUtil().toPageException(e);
 			StringWriter sw = new StringWriter();
@@ -112,6 +122,11 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 			lastExecution = System.currentTimeMillis();
 		}
 	}
+
+	/**
+	 * the actual work of the task, called by {@link #execute(Config)}
+	 */
+	protected abstract Object doExecute(Config config) throws PageException;
 
 	@Override
 	public final Array getExceptions() {

@@ -121,7 +121,7 @@ public final class MailSpoolerTask extends SpoolerTaskSupport {
 	}
 
 	@Override
-	public Object execute(Config config) throws PageException {
+	protected Object doExecute(Config config) throws PageException {
 		try {
 			client._send((ConfigWeb) config, servers);
 		} catch (MailException e) {
