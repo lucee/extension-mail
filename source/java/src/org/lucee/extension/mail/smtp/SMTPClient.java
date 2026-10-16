@@ -213,8 +213,9 @@ public final class SMTPClient implements Serializable {
 			long idleTimespan) throws MailException {
 		int index;
 
-		// username/password
-		index = server.indexOf('@');
+		// username/password — LDEV-945: use lastIndexOf so usernames containing '@'
+		// (user@domain.com:pw@host:port) parse correctly; also decode %40 etc.
+		index = server.lastIndexOf('@');
 		if (index != -1) {
 			usr = server.substring(0, index);
 			server = server.substring(index + 1);
@@ -223,6 +224,8 @@ public final class SMTPClient implements Serializable {
 				pwd = usr.substring(index + 1);
 				usr = usr.substring(0, index);
 			}
+			usr = decodeMailServerComponent(usr);
+			pwd = decodeMailServerComponent(pwd);
 		}
 
 		// port
@@ -238,6 +241,20 @@ public final class SMTPClient implements Serializable {
 
 		Server srv = ServerPro.getInstance(server, port, usr, pwd, lifeTimespan, idleTimespan, false, false);
 		return srv;
+	}
+
+	/**
+	 * Decode percent-encoded credentials in the cfmail server attribute (LDEV-945).
+	 * Preserves literal '+' (URLDecoder would turn '+' into space).
+	 */
+	private static String decodeMailServerComponent(String value) {
+		if (value == null || value.indexOf('%') < 0)
+			return value;
+		try {
+			return java.net.URLDecoder.decode(value.replace("+", "%2B"), "UTF-8");
+		} catch (Exception e) {
+			return value;
+		}
 	}
 
 	public void setHost(String host) throws PageException {
