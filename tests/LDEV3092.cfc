@@ -1,7 +1,7 @@
 /*
  * LDEV-3092: the mail spooler keeps retrying a mail whose attachment file is gone. The file will not come back,
  * so the task should be closed after the attempt instead of being rescheduled.
- * Also checks that a failed attempt is counted (tries), which the retry plan (1m, 5m, 1h, 2x 24h) depends on.
+ * Also checks that a failed attempt is counted (tries); that bookkeeping now comes from LDEV-6597 (SpoolerTaskSupport.execute).
  * Self-contained: the failing mails go to the closed port 1. The delivery control needs the fake SMTP sink on
  * 127.0.0.1:2525 (mail/_tools/smtp_sink.py, MAIL_SINK_DIR) and is skipped without it.
  */

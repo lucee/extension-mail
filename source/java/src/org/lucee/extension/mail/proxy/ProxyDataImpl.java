@@ -15,6 +15,10 @@ import lucee.runtime.util.Cast;
 
 public final class ProxyDataImpl implements ProxyData, Serializable {
 
+	// LDEV-3213: pinned to the value Java computed for every release so far (1.1.0.8-RC to 1.1.0.13), so queued
+	// mails (.tsk files) stay readable when this class changes.
+	private static final long serialVersionUID = -6345158304783143024L;
+
 	public static final ProxyData NO_PROXY = new ProxyDataImpl();
 
 	public static final Set<String> LOCALS = new HashSet<String>();

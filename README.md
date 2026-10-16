@@ -11,12 +11,15 @@ Issues: https://luceeserver.atlassian.net/issues/?jql=labels%20%3D%20smtp
 
 ## Versioning and releases
 
-The version is not edited by hand. `pom.xml` uses a CI-friendly `${revision}` built from
-`extension.version.base` (e.g. `1.1.0`), a build number and `extension.version.qualifier` (e.g. `-RC`).
+The version lives in `pom.xml` as a `-SNAPSHOT` (e.g. `1.1.0.18-SNAPSHOT`), the same scheme as the Quartz extension.
 
-* Local, PR and normal pushes use build number `0` (e.g. `1.1.0.0-RC`) and publish nothing.
-* A release build (push to `main` with `[release]` in the commit message, or a manual run with `deploy` checked)
-  takes the highest existing build of the base, from the git tags and from Maven Central, adds 1,
-  publishes that version (e.g. `1.1.0.12-RC`) and creates the tag `1.1.0.12`.
-* A `-SNAPSHOT` qualifier publishes to the Central snapshot repository, any other qualifier (or none) publishes a release.
-* To start a new line change `extension.version.base`; for a stable line set `extension.version.qualifier` to empty.
+* **Every push** builds, tests and publishes the `-SNAPSHOT` from `pom.xml` to the
+  [Central snapshot repository](https://central.sonatype.com/repository/maven-snapshots/) and to S3, then a bump job
+  commits the next `-SNAPSHOT` ("Set version to ..."), so every commit gets its own build number.
+* **Pull requests** only build and test; they never publish.
+* **Manual run** (Actions > Run workflow) with a type:
+  * `release` publishes `X.Y.Z.N` (the pom version without `-SNAPSHOT`) to Maven Central and S3,
+  * `rc`, `beta`, `alpha` publish `X.Y.Z.N-RC` / `-BETA` / `-ALPHA` (signed) to S3 only, never to Central,
+  * after any of these the next `-SNAPSHOT` is committed;
+  * `snapshot` deploys the current `-SNAPSHOT` again without a bump.
+* To start a new line change the version in `pom.xml` by hand (e.g. `1.2.0.0-SNAPSHOT`).

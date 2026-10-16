@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
-import org.apache.commons.text.WordUtils;
 
 import jakarta.activation.DataSource;
 import lucee.loader.util.Util;
@@ -38,6 +37,11 @@ public final class StringDataSource implements DataSource {
 
 	public final static char CR = (char) 13;
 	public final static char LF = (char) 10;
+
+	/**
+	 * maximum line length without CRLF allowed by RFC 5322 for 7bit/8bit content
+	 */
+	public final static int MAX_LINE_LENGTH = 998;
 
 	/*
 	 * Some types of transfer encoding such as "quoted-printable" and "base64" do
@@ -77,6 +81,22 @@ public final class StringDataSource implements DataSource {
 		throw new IOException("no access to write");
 	}
 
+	/**
+	 * true if the text contains a line (without its line break) that is longer than
+	 * the given length
+	 */
+	public boolean hasLineLongerThan(int maxLineLength) {
+		int len = 0;
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			if (c == CR || c == LF)
+				len = 0;
+			else if (++len > maxLineLength)
+				return true;
+		}
+		return false;
+	}
+
 	public static String wrapText(String text, int maxLineLength) {
 
 		if (Util.isEmpty(text))
@@ -90,10 +110,50 @@ public final class StringDataSource implements DataSource {
 
 			line = scanner.nextLine();
 			if (line.length() > maxLineLength)
-				line = WordUtils.wrap(line, maxLineLength);
+				line = wrapLine(line, maxLineLength);
 			sb.append(line).append(CR).append(LF);
 		}
 
+		return sb.toString();
+	}
+
+	/**
+	 * Wraps a single line at spaces so no segment exceeds wrapLength, unless a single word is
+	 * longer (long words are not broken). Same behavior as commons-text
+	 * WordUtils.wrap(str, wrapLength), which is not available on Lucee 8.
+	 */
+	static String wrapLine(String str, int wrapLength) {
+		if (str == null) return null;
+		if (wrapLength < 1) wrapLength = 1;
+		final String nl = System.lineSeparator();
+		final int len = str.length();
+		final StringBuilder sb = new StringBuilder(len + 32);
+		int offset = 0;
+		while (offset < len) {
+			// skip a leading space of a new segment
+			if (str.charAt(offset) == ' ') {
+				offset++;
+				continue;
+			}
+			if (len - offset <= wrapLength) break;
+			int spaceAt = str.lastIndexOf(' ', offset + wrapLength);
+			if (spaceAt >= offset) {
+				sb.append(str, offset, spaceAt).append(nl);
+				offset = spaceAt + 1;
+			}
+			else {
+				spaceAt = str.indexOf(' ', offset + wrapLength);
+				if (spaceAt >= 0) {
+					sb.append(str, offset, spaceAt).append(nl);
+					offset = spaceAt + 1;
+				}
+				else {
+					sb.append(str, offset, len);
+					offset = len;
+				}
+			}
+		}
+		sb.append(str, offset, len);
 		return sb.toString();
 	}
 

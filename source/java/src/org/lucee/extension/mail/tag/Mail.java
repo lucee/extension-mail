@@ -601,13 +601,42 @@ public final class Mail extends BodyTagImpl {
 	 * @param part
 	 */
 	private void addClassicBodyPart(org.lucee.extension.mail.MailPart part) {
+		// LDEV-4258: previously a second text/plain or text/html part was silently
+		// dropped once the first classic body was set. Extra parts of the same type
+		// go through setPart so they are all included in the multipart message.
+		// Skip empty bodies here: Mail.doAfterBody() also calls this for the tag body,
+		// which is empty when the message is built only from cfmailpart tags.
 		if (part.isHTML()) {
 			if (!smtp.hasHTMLText())
 				smtp.setHTMLText(part.getBody(), part.getCharset());
+			else if (hasBody(part)) {
+				normalizeType(part, "text/html");
+				addBodyPart(part);
+			}
 		} else {
 			if (!smtp.hasPlainText())
 				smtp.setPlainText(part.getBody(), part.getCharset());
+			else if (hasBody(part)) {
+				normalizeType(part, "text/plain");
+				addBodyPart(part);
+			}
 		}
+	}
+
+	/**
+	 * An extra part keeps its type as written in cfmailpart, which can be a short
+	 * form like "html", "htm", "text" or "plain". That is used as the part's MIME
+	 * type, and jakarta.mail then fails the whole send ("In Content-Type string
+	 * <html>, expected '/'"). Use the full MIME type, with the part's charset.
+	 */
+	private static void normalizeType(org.lucee.extension.mail.MailPart part, String mimeType) {
+		Charset cs = part.getCharset();
+		part.setType(cs == null ? mimeType : mimeType + "; charset=" + cs.name());
+	}
+
+	private static boolean hasBody(org.lucee.extension.mail.MailPart part) {
+		String body = part.getBody();
+		return body != null && body.trim().length() > 0;
 	}
 
 	@Override
