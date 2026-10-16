@@ -241,6 +241,10 @@ public abstract class MailClient implements PoolItem {
 		// properties.setProperty("mail.mime.charset", "UTF-8");
 		if (secure) {
 			properties.setProperty("mail." + type + ".ssl.enable", "true");
+			// LDEV-6488: pin the TLS protocols, like the SMTP side does since LDEV-5893
+			String protocols = MailUtil.getSslProtocols(type);
+			if (!Util.isEmpty(protocols))
+				properties.setProperty("mail." + type + ".ssl.protocols", protocols);
 			// properties.setProperty("mail."+type+".starttls.enable", "true" );
 			// allow using untrusted certs, good for CI
 			if (!CFMLEngineFactory.getInstance().getCastUtil()

@@ -26,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.IDN;
 import java.nio.charset.Charset;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -280,6 +281,38 @@ public final class MailUtil {
 				}
 			}
 		}
+	}
+
+	/**
+	 * LDEV-6488: TLS protocols for a secure IMAP/POP3 session (mail.[type].ssl.protocols). Without it, JavaMail's
+	 * SocketFetcher enables whatever the socket reports, which on some setups includes protocols the JDK has
+	 * disabled, and the handshake fails with "No appropriate protocol". The system property / env var
+	 * mail.[type].ssl.protocols (or mail.[type]s.ssl.protocols) wins if set, otherwise the JDK's enabled protocols
+	 * without the ones listed in jdk.tls.disabledAlgorithms (TLSv1.2/1.3 on current JDKs).
+	 */
+	public static String getSslProtocols(String type) {
+		String protocols = Util.getSystemPropOrEnvVar("mail." + type + ".ssl.protocols", null);
+		if (Util.isEmpty(protocols, true))
+			protocols = Util.getSystemPropOrEnvVar("mail." + type + "s.ssl.protocols", null);
+		if (!Util.isEmpty(protocols, true))
+			return protocols.trim();
+
+		List<String> disabled = new ArrayList<>();
+		String str = Security.getProperty("jdk.tls.disabledAlgorithms");
+		if (str != null) {
+			for (String item : str.split(",")) {
+				disabled.add(item.trim().toLowerCase());
+			}
+		}
+		StringBuilder sb = new StringBuilder();
+		for (String p : SSLConnectionSocketFactoryImpl.getEnabledSslProtocols()) {
+			if (p.startsWith("SSL") || disabled.contains(p.toLowerCase()))
+				continue;
+			if (sb.length() > 0)
+				sb.append(' ');
+			sb.append(p);
+		}
+		return sb.toString();
 	}
 
 	public static byte[] toBytes(InputStream is) throws IOException {
