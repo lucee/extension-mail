@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- [LDEV-1566](https://luceeserver.atlassian.net/browse/LDEV-1566) — `cfpop` and `cfimap` accept `returntype="query|array|struct"` and `columnKey` for the actions `getHeaderOnly`, `getAll` and `listAllFolders` (struct needs `columnKey` when more than one row is returned)
+- [LDEV-1567](https://luceeserver.atlassian.net/browse/LDEV-1567) — `columnKey` can be a comma separated list of columns, creating one struct level per column (if a key combination occurs more than once, the last row wins)
 - [LDEV-945](https://luceeserver.atlassian.net/browse/LDEV-945) — parse `server="user@domain:pw@host:port"` with `lastIndexOf('@')` and decode percent-encoded credentials (`%40` → `@`)
 - [LDEV-4258](https://luceeserver.atlassian.net/browse/LDEV-4258) — include every `cfmailpart` of the same type (previously only the first text/plain or text/html part was sent)
 - [LDEV-6545](https://luceeserver.atlassian.net/browse/LDEV-6545) — send HTML mail parts `quoted-printable` by default again (LDEV-5176 had flipped the default to `7bit`, so long HTML lines were split at 998 characters); `lucee.mail.use.7bit.transfer.encoding.for.html.parts=true` still opts in to `7bit`, but falls back to `quoted-printable` for a part whose lines cannot be wrapped to 998 characters; extra `text/html` parts are now recognised regardless of case and as `html`/`htm`
