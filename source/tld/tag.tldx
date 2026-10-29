@@ -465,7 +465,7 @@
 			<name>columnKey</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
-			<description>Name of the column whose value is used as key when "returntype" is "struct". Required if more than one row is returned.</description>
+			<description>Name of the column whose value is used as key when "returntype" is "struct". Can be a comma separated list of columns (for example "country,city"), in that case the result is nested, one struct level per column; if a key combination occurs more than once, the last row wins. Required if more than one row is returned.</description>
 		</attribute>
 		<attribute>
 			<type>string</type>
@@ -665,7 +665,7 @@
 			<name>columnKey</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
-			<description>Name of the column whose value is used as key when "returntype" is "struct". Required if more than one row is returned.</description>
+			<description>Name of the column whose value is used as key when "returntype" is "struct". Can be a comma separated list of columns (for example "country,city"), in that case the result is nested, one struct level per column; if a key combination occurs more than once, the last row wins. Required if more than one row is returned.</description>
 		</attribute>
 		<attribute>
 			<type>string</type>

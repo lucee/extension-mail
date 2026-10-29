@@ -1,5 +1,8 @@
 package org.lucee.extension.mail;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lucee.loader.engine.CFMLEngine;
 import lucee.loader.engine.CFMLEngineFactory;
 import lucee.runtime.exp.PageException;
@@ -52,7 +55,7 @@ public final class QueryReturnType {
 	 * 
 	 * @param qry the query
 	 * @param returnType one of QUERY,ARRAY,STRUCT
-	 * @param columnKey only used for STRUCT, the name of the column the value of is used as key
+	 * @param columnKey only used for STRUCT, the name of the column (or a comma separated list of columns, creating one struct level per column) the value of is used as key
 	 * @return the query itself for QUERY, otherwise an array of structs or a struct of structs
 	 */
 	public static Object convert(Query qry, int returnType, String columnKey) throws PageException {
@@ -73,22 +76,53 @@ public final class QueryReturnType {
 		}
 
 		Struct sct = creator.createStruct(Struct.TYPE_LINKED);
+
+		// the column key can be a comma separated list of columns
+		List<Key> keys = new ArrayList<Key>();
+		if (columnKey != null) {
+			Key ck;
+			for (String name: columnKey.split(",")) {
+				if (name.trim().isEmpty()) continue;
+				ck = caster.toKey(name.trim());
+				if (qry.getColumn(ck, null) == null) {
+					throw factory.getExceptionUtil().createApplicationException("Attribute [columnKey] has an invalid value",
+							"the query has no column with the name [" + name.trim() + "]");
+				}
+				keys.add(ck);
+			}
+		}
+
 		// no column key, the query must have a single record, the struct is that record (same as cfquery)
-		if (columnKey == null || columnKey.trim().isEmpty()) {
+		if (keys.isEmpty()) {
 			if (rows == 0) return sct;
 			if (rows > 1) throw factory.getExceptionUtil()
 					.createApplicationException("Attribute [columnKey] is required when return type is set to struct and more than one record is returned");
 			return toStruct(creator, qry, columns, 1);
 		}
 
-		Key ck = caster.toKey(columnKey.trim());
-		if (qry.getColumn(ck, null) == null) {
-			throw factory.getExceptionUtil().createApplicationException("Attribute [columnKey] has an invalid value", "the query has no column with the name [" + columnKey.trim() + "]");
-		}
-		Object k;
+		// one struct level per column, if a key combination exists more than once the last row wins
+		Struct current, sub;
+		Object k, tmp;
+		Key key;
+		int last = keys.size() - 1;
 		for (int r = 1; r <= rows; r++) {
-			k = qry.getAt(ck, r, null);
-			sct.setEL(k == null ? creator.createKey("") : caster.toKey(k), toStruct(creator, qry, columns, r));
+			current = sct;
+			for (int i = 0; i <= last; i++) {
+				k = qry.getAt(keys.get(i), r, null);
+				key = k == null ? creator.createKey("") : caster.toKey(k);
+				if (i == last) {
+					current.setEL(key, toStruct(creator, qry, columns, r));
+				}
+				else {
+					tmp = current.get(key, null);
+					if (tmp instanceof Struct) sub = (Struct) tmp;
+					else {
+						sub = creator.createStruct(Struct.TYPE_LINKED);
+						current.setEL(key, sub);
+					}
+					current = sub;
+				}
+			}
 		}
 		return sct;
 	}

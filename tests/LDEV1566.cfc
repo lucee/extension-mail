@@ -58,6 +58,27 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="mail" javaSettings
 				expect( local.res[ "LDEV1566 two" ].subject ).toBe( "LDEV1566 two" );
 			});
 
+			it( "LDEV-1567 columnKey with a list of columns creates nested structs", function() {
+				pop action="getHeaderOnly" name="local.res" server="localhost" port=variables.popPort username=variables.username password=variables.password secure=false returntype="struct" columnKey="from,subject";
+				expect( isStruct( local.res ) ).toBeTrue();
+				var outer = structKeyArray( local.res );
+				expect( arrayLen( outer ) ).toBe( 1 );
+				expect( structCount( local.res[ outer[ 1 ] ] ) ).toBe( 2 );
+				expect( local.res[ outer[ 1 ] ][ "LDEV1566 one" ].subject ).toBe( "LDEV1566 one" );
+				expect( local.res[ outer[ 1 ] ][ "LDEV1566 two" ].subject ).toBe( "LDEV1566 two" );
+			});
+
+			it( "LDEV-1567 the last row wins if a key is used more than once", function() {
+				pop action="getHeaderOnly" name="local.res" server="localhost" port=variables.popPort username=variables.username password=variables.password secure=false returntype="struct" columnKey="from";
+				expect( structCount( local.res ) ).toBe( 1 );
+			});
+
+			it( "LDEV-1567 a missing column in columnKey throws", function() {
+				expect( function() {
+					pop action="getHeaderOnly" name="local.res" server="localhost" port=variables.popPort username=variables.username password=variables.password secure=false returntype="struct" columnKey="from,nope";
+				}).toThrow();
+			});
+
 			it( "returntype=struct without columnKey and more than one row throws", function() {
 				expect( function() {
 					pop action="getHeaderOnly" name="local.res" server="localhost" port=variables.popPort username=variables.username password=variables.password secure=false returntype="struct";
