@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lucee.extension.mail.MailClient;
+import org.lucee.extension.mail.QueryReturnType;
 
 import lucee.commons.io.res.Resource;
 import lucee.loader.engine.CFMLEngine;
@@ -45,6 +46,9 @@ public abstract class _Mail extends TagImpl {
 	private List<Credential> credentials = new ArrayList<_Mail.Credential>();
 	private boolean stopOnError = true;
 
+	private int returnType = QueryReturnType.QUERY;
+	private String columnKey;
+
 	public _Mail() {
 
 	}
@@ -71,6 +75,8 @@ public abstract class _Mail extends TagImpl {
 		recurse = false;
 		connection = null;
 		stopOnError = true;
+		returnType = QueryReturnType.QUERY;
+		columnKey = null;
 		super.release();
 	}
 
@@ -136,6 +142,22 @@ public abstract class _Mail extends TagImpl {
 	 */
 	public void setAction(String action) {
 		this.action = action.trim().toLowerCase();
+	}
+
+	/**
+	 * @param returntype
+	 *            how the result of getHeaderOnly, getAll and listAllFolders is returned: query (default), array or struct
+	 */
+	public void setReturntype(String returntype) throws PageException {
+		this.returnType = QueryReturnType.parse(returntype, getTagName());
+	}
+
+	/**
+	 * @param columnKey
+	 *            the column whose value is used as key when returntype is struct
+	 */
+	public void setColumnkey(String columnKey) {
+		this.columnKey = columnKey;
 	}
 
 	/**
@@ -297,10 +319,10 @@ public abstract class _Mail extends TagImpl {
 
 			if (action.equals("getheaderonly")) {
 				required(getTagName(), action, "name", name);
-				pageContext.setVariable(name, client.getMails(messageNumber, uid, false, folder));
+				pageContext.setVariable(name, QueryReturnType.convert(client.getMails(messageNumber, uid, false, folder), returnType, columnKey));
 			} else if (action.equals("getall")) {
 				required(getTagName(), action, "name", name);
-				pageContext.setVariable(name, client.getMails(messageNumber, uid, true, folder));
+				pageContext.setVariable(name, QueryReturnType.convert(client.getMails(messageNumber, uid, true, folder), returnType, columnKey));
 			} else if (action.equals("delete")) {
 				client.deleteMails(messageNumber, uid, folder);
 			}
@@ -324,7 +346,7 @@ public abstract class _Mail extends TagImpl {
 				required(getTagName(), action, "newfolder", newfolder);
 				client.renameFolder(folder, newfolder);
 			} else if (getType() == MailClient.TYPE_IMAP && action.equals("listallfolders")) {
-				pageContext.setVariable(name, client.listAllFolder(folder, recurse, startrow, maxrows));
+				pageContext.setVariable(name, QueryReturnType.convert(client.listAllFolder(folder, recurse, startrow, maxrows), returnType, columnKey));
 			} else if (getType() == MailClient.TYPE_IMAP && action.equals("movemail")) {
 				required(getTagName(), action, "newfolder", newfolder);
 				client.moveMail(folder, newfolder, messageNumber, uid);
