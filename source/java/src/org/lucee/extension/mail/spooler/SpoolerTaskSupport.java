@@ -96,6 +96,12 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 	@Override
 	public final Object execute(Config config) throws PageException {
 
+		// Core calls the listener only for its own tasks (SpoolerTaskPro, core only), so the listener is called
+		// here, "before" ahead of the try and "after" once it is done, like core did (LDEV-7024).
+		CFMLSpoolerTaskListener listener = getCFMLSpoolerTaskListener();
+		if (listener != null)
+			listener.listen(config, null, true);
+
 		lastExecution = System.currentTimeMillis();
 		tries++;
 		CFMLEngine eng = CFMLEngineFactory.getInstance();
@@ -103,9 +109,14 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 		if (exceptions == null)
 			exceptions = eng.getCreationUtil().createArray();
 
+		Exception failure = null;
+		boolean done = false;
 		try {
-			return doExecute(config);
+			Object result = doExecute(config);
+			done = true;
+			return result;
 		} catch (Exception e) {
+			failure = e;
 			PageException pe = eng.getCastUtil().toPageException(e);
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -120,7 +131,27 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 			throw pe;
 		} finally {
 			lastExecution = System.currentTimeMillis();
+			// core closes the task after a successful try or when the plan is used up
+			if (listener != null && (done || failure != null))
+				listener.listen(config, failure, false, done || tries >= maxTries());
 		}
+	}
+
+	/**
+	 * the listener of this task or null, called by {@link #execute(Config)} before and after every try
+	 */
+	protected CFMLSpoolerTaskListener getCFMLSpoolerTaskListener() {
+		return null;
+	}
+
+	private int maxTries() {
+		int max = 0;
+		if (plans != null) {
+			for (ExecutionPlan plan : plans) {
+				max += plan.getTries();
+			}
+		}
+		return max;
 	}
 
 	/**
@@ -134,12 +165,7 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 	 * already counted by execute(Config).
 	 */
 	protected final void noMoreTries() {
-		int max = 0;
-		if (plans != null) {
-			for (ExecutionPlan plan : plans) {
-				max += plan.getTries();
-			}
-		}
+		int max = maxTries();
 		if (tries < max) tries = max;
 	}
 
