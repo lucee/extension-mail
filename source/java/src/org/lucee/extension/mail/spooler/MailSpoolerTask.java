@@ -16,6 +16,7 @@ import lucee.runtime.config.ConfigWeb;
 import lucee.runtime.exp.PageException;
 import lucee.runtime.net.mail.Server;
 import lucee.runtime.spooler.ExecutionPlan;
+import lucee.runtime.spooler.listener.SpoolerTaskListener;
 import lucee.runtime.type.Struct;
 
 public final class MailSpoolerTask extends SpoolerTaskSupport {
@@ -142,7 +143,13 @@ public final class MailSpoolerTask extends SpoolerTaskSupport {
 		return null;
 	}
 
-	public CFMLSpoolerTaskListener getSpoolerTaskListener() {
+	/**
+	 * Called before and after every try by SpoolerTaskSupport.execute(Config) (LDEV-7024). This is
+	 * intentionally not named getSpoolerTaskListener(): that is the name of the loader's SpoolerTask method
+	 * (default null), and a Lucee core that calls it would call the listener a second time.
+	 */
+	@Override
+	protected SpoolerTaskListener getTaskListener() {
 		return listener;
 	}
 

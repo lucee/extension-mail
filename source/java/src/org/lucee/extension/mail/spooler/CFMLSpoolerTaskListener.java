@@ -15,24 +15,35 @@ import lucee.runtime.config.Config;
 import lucee.runtime.config.ConfigWeb;
 import lucee.runtime.exp.PageException;
 import lucee.runtime.spooler.SpoolerTask;
+import lucee.runtime.spooler.listener.SpoolerTaskListener;
 import lucee.runtime.type.Struct;
 
-public abstract class CFMLSpoolerTaskListener {
+/**
+ * Implements the loader's (Serializable) SpoolerTaskListener: the listener is a field of the spooled
+ * MailSpoolerTask, so it is written to the .tsk file with the task. A listener that is not
+ * serializable makes the task impossible to store, and the spooler then sends the mail in the
+ * calling thread, without queue, retries or listener (LDEV-7024).
+ */
+public abstract class CFMLSpoolerTaskListener implements SpoolerTaskListener {
+
+	private static final long serialVersionUID = 4160934716394586277L;
 
 	private final SpoolerTask task;
 	private TemplateLine currTemplate;
-	private CFMLEngine eng;
+	// the engine is not serializable and is the same for the whole JVM, so it is looked up again
+	private transient CFMLEngine eng;
 
 	public CFMLSpoolerTaskListener(TemplateLine currTemplate, SpoolerTask task) {
-		this.eng = CFMLEngineFactory.getInstance();
 		this.task = task;
 		this.currTemplate = currTemplate;
 	}
 
+	@Override
 	public void listen(Config config, Exception e, boolean before) {
 
 		if (!(config instanceof ConfigWeb))
 			return;
+		CFMLEngine eng = engine();
 		ConfigWeb cw = (ConfigWeb) config;
 
 		PageContext pc = eng.getThreadPageContext();
@@ -99,6 +110,12 @@ public abstract class CFMLSpoolerTaskListener {
 			if (pcCreated)
 				MailUtil.releasePageContext(pc);
 		}
+	}
+
+	private CFMLEngine engine() {
+		if (eng == null)
+			eng = CFMLEngineFactory.getInstance();
+		return eng;
 	}
 
 	public abstract Object _listen(PageContext pc, Struct args, boolean before) throws PageException;

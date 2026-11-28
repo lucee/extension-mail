@@ -9,6 +9,7 @@ import lucee.runtime.config.Config;
 import lucee.runtime.exp.PageException;
 import lucee.runtime.spooler.ExecutionPlan;
 import lucee.runtime.spooler.SpoolerTask;
+import lucee.runtime.spooler.listener.SpoolerTaskListener;
 import lucee.runtime.type.Array;
 import lucee.runtime.type.Struct;
 
@@ -96,6 +97,11 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 	@Override
 	public final Object execute(Config config) throws PageException {
 
+		// before: like core, before the try is counted
+		SpoolerTaskListener listener = getTaskListener();
+		if (listener != null)
+			listener.listen(config, null, true);
+
 		lastExecution = System.currentTimeMillis();
 		tries++;
 		CFMLEngine eng = CFMLEngineFactory.getInstance();
@@ -103,8 +109,10 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 		if (exceptions == null)
 			exceptions = eng.getCreationUtil().createArray();
 
+		Object result = null;
+		PageException failure = null;
 		try {
-			return doExecute(config);
+			result = doExecute(config);
 		} catch (Exception e) {
 			PageException pe = eng.getCastUtil().toPageException(e);
 			StringWriter sw = new StringWriter();
@@ -117,10 +125,29 @@ public abstract class SpoolerTaskSupport implements SpoolerTask {
 			sct.setEL("time", eng.getCastUtil().toLong(System.currentTimeMillis()));
 			exceptions.appendEL(sct);
 
-			throw pe;
+			failure = pe;
 		} finally {
 			lastExecution = System.currentTimeMillis();
 		}
+
+		// after, passed or failed. This is outside the try on purpose: whatever the listener does must never
+		// turn a mail that was sent into a failed try (that would send it again). The listener logs its own errors.
+		if (listener != null)
+			listener.listen(config, failure, false);
+
+		if (failure != null)
+			throw failure;
+		return result;
+	}
+
+	/**
+	 * The listener to call before and after every try, or null. Lucee core only calls the listener of its
+	 * own spooler tasks, never one of an extension's task, so execute(Config) calls it (LDEV-7024).
+	 * Note that core updates closed and nextExecution of the task only after execute(Config) returned,
+	 * so they still have their value of the try before when the listener runs.
+	 */
+	protected SpoolerTaskListener getTaskListener() {
+		return null;
 	}
 
 	/**
