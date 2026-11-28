@@ -142,7 +142,10 @@ public final class MailSpoolerTask extends SpoolerTaskSupport {
 		return null;
 	}
 
-	public CFMLSpoolerTaskListener getSpoolerTaskListener() {
+	// not named getSpoolerTaskListener(), that name is a default method of SpoolerTask in the loader with another
+	// return type and would clash when compiled against loader 7.1+ (LDEV-7024)
+	@Override
+	protected CFMLSpoolerTaskListener getCFMLSpoolerTaskListener() {
 		return listener;
 	}
 

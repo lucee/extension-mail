@@ -17,23 +17,50 @@ import lucee.runtime.exp.PageException;
 import lucee.runtime.spooler.SpoolerTask;
 import lucee.runtime.type.Struct;
 
-public abstract class CFMLSpoolerTaskListener {
+/**
+ * Listener of a spooled mail (cfmail attribute listener, this.mail.listener).
+ * <p>
+ * The listener is a field of the MailSpoolerTask, so it is written to the task file together with the task and
+ * has to be serializable (LDEV-7024), otherwise the task cannot be stored and core sends the mail in the calling
+ * thread (no queue, no retry). The engine is not serialized, it is looked up again when needed.
+ * <p>
+ * Core only calls the listener of its own spooler tasks (SpoolerTaskPro, a core class an extension cannot compile
+ * against), so the extension's SpoolerTaskSupport calls {@link #listen(Config, Exception, boolean, boolean)} itself.
+ */
+public abstract class CFMLSpoolerTaskListener implements Serializable {
+
+	private static final long serialVersionUID = -2319421305863384120L;
 
 	private final SpoolerTask task;
 	private TemplateLine currTemplate;
-	private CFMLEngine eng;
+	private transient CFMLEngine eng;
 
 	public CFMLSpoolerTaskListener(TemplateLine currTemplate, SpoolerTask task) {
-		this.eng = CFMLEngineFactory.getInstance();
 		this.task = task;
 		this.currTemplate = currTemplate;
 	}
 
+	private CFMLEngine engine() {
+		if (eng == null)
+			eng = CFMLEngineFactory.getInstance();
+		return eng;
+	}
+
 	public void listen(Config config, Exception e, boolean before) {
+		listen(config, e, before, task.closed());
+	}
+
+	/**
+	 * @param closed
+	 *            the value of the argument "closed" for the listener, after a try the task is not closed yet
+	 *            when this is called, so the caller tells whether this was the last try
+	 */
+	public void listen(Config config, Exception e, boolean before, boolean closed) {
 
 		if (!(config instanceof ConfigWeb))
 			return;
 		ConfigWeb cw = (ConfigWeb) config;
+		CFMLEngine eng = engine();
 
 		PageContext pc = eng.getThreadPageContext();
 		boolean pcCreated = false;
@@ -69,7 +96,7 @@ public abstract class CFMLSpoolerTaskListener {
 
 			args.set("tries", task.tries());
 			args.set("remainingtries", e == null ? 0 : Math.max(0, task.getPlans().length - task.tries()));
-			args.set("closed", task.closed());
+			args.set("closed", closed);
 			if (!before)
 				args.set("passed", e == null);
 			if (e != null)
